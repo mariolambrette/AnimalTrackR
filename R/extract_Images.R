@@ -3,15 +3,24 @@
 extract_Images <-
   function(videos,
            group_weights = NULL,
+           nimgs = 1600, # ~ 1000 training images, 300 testing 300 validation
            project = get_Project()){
 
 
-    # Check python environment meet requirements
+    # Check python environment meets requirements
     check_TrackR_env()
+
+    # Check names of video and weights lists match
+    if(!is.NULL(group_weights) &&
+       sort(names(videos)) != sort(names(group_weights))){
+      stop("Group names in video and weights list do not match.\n
+           Please check and try again")
+    }
 
     # Create python arguments for extraction function
     reticulate::r_to_py(videos)
     reticulate::r_to_py(group_weights)
+    reticulate::r_to_py(nimgs)
     file.path(project, "ToAnnotate")
 
 
