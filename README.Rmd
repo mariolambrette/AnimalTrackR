@@ -22,6 +22,8 @@ AnimalTrackR provides a simple interface to YOLOv8 to allow users to train anima
 
 ## Installation
 
+FFMPEG NEEDED!!!!!
+
 You can install the development version of AnimalTrackR like so:
 
 ``` r

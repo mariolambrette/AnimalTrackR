@@ -15,6 +15,14 @@
   ## Load python modules here using import_from_path and delay_load = TRUE
   ## use assignInMyNamespace to make functions available in the package
   ## https://forum.posit.co/t/build-package-namespace-dynamically-during-onload/4101/3
+
+  py_extractImages <- reticulate::import_from_path(
+    "extract_Images_py",
+    system.file("python", package = packageName()),
+    delay_load = TRUE
+  )
+  utils::assignInMyNamespace("py_extractImages", py_extractImages)
+
 }
 
 

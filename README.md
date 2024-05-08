@@ -11,6 +11,8 @@ train animal detection models to aid large scale beavioural analyses.
 
 ## Installation
 
+FFMPEG NEEDED!!!!!
+
 You can install the development version of AnimalTrackR like so:
 
 ``` r
