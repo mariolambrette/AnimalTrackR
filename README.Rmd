@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# AnimalTrackR <img src="man/figures/logo.png" align="right" height="130" alt="" />
+# AnimalTrackR <img src="man/figures/logo.png" align="right" height="140" alt="" />
 
 AnimalTrackR provides a simple interface to YOLOv8 to allow users to train animal detection models to aid large scale behavioural analyses.
 
@@ -41,6 +41,7 @@ FFmpeg is a critical dependency of `AnialTrackR`. Please ensure that you have FF
 
 `AnimalTrackR` uses a specific file structure to support working on multiple projects and allow seamless integration with standard YOLOv8 development pipelines. The structure is as follows:
 
+```
 .
 └── AnimalTrackR-projects
     ├── Project1
@@ -52,9 +53,11 @@ FFmpeg is a critical dependency of `AnialTrackR`. Please ensure that you have FF
     │       │   └── images
     │       │       └── .jpg images ready for model training
     │       ├── Test
-    │       │   └── ...
+    │       │   ├── labels
+    │       │   └── images
     │       ├── Val
-    │       │   └── ...
+    │       │   ├── labels
+    │       │   └── images
     │       ├── configs
     │       │   ├── model1.yaml 
     │       │   │   └── model training configuration files, there will be one for each model in the models/ directory
@@ -65,10 +68,10 @@ FFmpeg is a critical dependency of `AnialTrackR`. Please ensure that you have FF
     │           └── model2/
     └── Project2
         └── ...
+```
         
 Most users will never need to interact directly with the vast majority of this file structure, it is created and managed by helper functions provided in `AnimalTrackR`
 
-WRITE A MORE DETAILED FILE STRUCTURE MANUAL ELSEWHERE
 
 ### First Usage:
 

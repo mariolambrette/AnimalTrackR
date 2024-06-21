@@ -45,20 +45,36 @@ subsequent analyses.
 multiple projects and allow seamless integration with standard YOLOv8
 development pipelines. The structure is as follows:
 
-. └── AnimalTrackR-projects ├── Project1 │ ├── ToAnnotate │ └── YOLO │
-├── Train │ │ ├── labels │ │ │ └── .txt annotation files corresponding
-to the images in the images/ directory │ │ └── images │ │ └── .jpg
-images ready for model training │ ├── Test │ │ └── … │ ├── Val │ │ └── …
-│ ├── configs │ │ ├── model1.yaml │ │ │ └── model training configuration
-files, there will be one for each model in the models/ directory │ │ └──
-model2.yaml │ └── models │ ├── model1/ │ │ └── Files containing model
-training info and model weights. │ └── model2/ └── Project2 └── …
+    .
+    └── AnimalTrackR-projects
+        ├── Project1
+        │   ├── ToAnnotate
+        │   └── YOLO
+        │       ├── Train
+        │       │   ├── labels
+        │       │   │   └── .txt annotation files corresponding to the images in the images/ directory
+        │       │   └── images
+        │       │       └── .jpg images ready for model training
+        │       ├── Test
+        │       │   ├── labels
+        │       │   └── images
+        │       ├── Val
+        │       │   ├── labels
+        │       │   └── images
+        │       ├── configs
+        │       │   ├── model1.yaml 
+        │       │   │   └── model training configuration files, there will be one for each model in the models/ directory
+        │       │   └── model2.yaml
+        │       └── models
+        │           ├── model1/
+        │           │   └── Files containing model training info and model weights. 
+        │           └── model2/
+        └── Project2
+            └── ...
 
 Most users will never need to interact directly with the vast majority
 of this file structure, it is created and managed by helper functions
 provided in `AnimalTrackR`
-
-WRITE A MORE DETAILED FILE STRUCTURE MANUAL ELSEWHERE
 
 ### First Usage:
 
