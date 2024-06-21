@@ -13,9 +13,15 @@ knitr::opts_chunk$set(
 )
 ```
 
+<<<<<<< HEAD
 
 
 # <img src="man/figures/logo.png" align="left" height="140" alt="AnimalTrackR Logo" style="margin-right: 20px;" /> AnimalTrackR
+=======
+<img src="man/figures/logo.png" align="right" height="130" alt="" />
+
+# AnimalTrackR
+>>>>>>> e814dad9493cc27c45b6f81d0e2628b48cbb2875
 
 AnimalTrackR provides a simple interface to YOLOv8 to allow users to train animal detection models to aid large scale behavioural analyses.
 
