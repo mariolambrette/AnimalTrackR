@@ -1,15 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-<div style="display: flex; justify-content: space-between; align-items: baseline;">
+<img src="man/figures/logo.png" align="right" height="130" alt="" />
 
-<h1 style="margin-right: 10px;">
-AnimalTrackR
-</h1>
-
-<img src="man/figures/logo.png" height="130" alt="AnimalTrackR Logo" style="vertical-align: bottom;">
-
-</div>
+# AnimalTrackR
 
 AnimalTrackR provides a simple interface to YOLOv8 to allow users to
 train animal detection models to aid large scale behavioural analyses.
