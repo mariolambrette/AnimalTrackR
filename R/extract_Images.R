@@ -1,10 +1,10 @@
-## Function to extract training/testing&validation images from video data
+## Function to extract training, testing & validation images from video data
 
 # Minimum of one image per video
 # accept either path to mp4 files or path to parent folder for chapterised videos
 # parent folders will be treated as 'videos' for sampling purposes
 # supported video format: '.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm'
-#  (not case sensitive). ALternative file types can be added with the vid_ext argument,
+#  (not case sensitive). Alternative file types can be added with the vid_ext argument,
 #  though the file types must be compatible with opencv
 
 extract_Images <-
@@ -36,13 +36,14 @@ extract_Images <-
       stop("`nimgs` is not numeric")
     }
 
-    # Create python arguments for extraction function
-    reticulate::r_to_py(videos)
-    reticulate::r_to_py(group_weights)
-    reticulate::r_to_py(nimgs)
-    reticulate::r_to_py(vid_ext)
-    file.path(project, "ToAnnotate")
-
+    # Extract Images using dedicated python function
+    py_extractImages(
+      vids = reticulate::r_to_py(videos),
+      weights = reticulate::r_to_py(group_weights),
+      n = reticulate::r_to_py(nimgs),
+      path = file.path(project, "ToAnnotate"),
+      vid_ext = reticulate::r_to_py(vid_ext)
+    )
 
 
 

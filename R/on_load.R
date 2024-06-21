@@ -8,7 +8,7 @@
     reticulate::use_virtualenv("animaltrackr")
   } else{
     warning("Default python environment (animaltrackr) not found.\n
-            Please use `install_TrackR()` to create it, or use `TrackR_env()`
+            Please use `install_TrackR()` to create it, or use `TrackR_virtualenv()`
             to use an environemnt with a different name")
   }
 
@@ -29,8 +29,9 @@
 # package environment variables
 trackr_env <- new.env(parent = emptyenv())
 trackr_env$project <- NULL
-trackr_env$python_packages <- c( "ultralytics",
-                                 "torch",
-                                 "datetime")
+trackr_env$python_packages <- c("ultralytics",
+                                "torchaudio",
+                                "torchvision",
+                                "opencv-python")
 trackr_env$proj <- NULL
 trackr_env$os <- NULL

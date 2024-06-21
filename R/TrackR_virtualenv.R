@@ -6,7 +6,7 @@
 #' the correct virtual environment for `AnimalTrackR` to run.
 #'
 #' Note that the named environment must be a python 3.9 environment with the correct
-#' prerequisute packages installed or the function give an error.
+#' dependencies installed or the function gives an error.
 #'
 #'
 #' @param envname Character string. Name of the virtual environemnt to connect to.
@@ -16,6 +16,7 @@
 #'
 #' @examples
 #' TrackR_virtualenv('animaltrackr')
+
 TrackR_virtualenv <- function(envname){
 
   # Check the specified environment exists
@@ -34,7 +35,7 @@ TrackR_virtualenv <- function(envname){
 }
 
 
-## Function for checking active python enviornment meet requirement - insternal non-exported function
+## Function for checking active python environment meet requirement - internal non-exported function
 check_TrackR_env <- function(){
   # Check the python version and installed packages in the specified environment
   py_version <- reticulate::py_discover_config()$python_version
@@ -44,7 +45,7 @@ check_TrackR_env <- function(){
          Please set or create a python environment with `TrackR_virtualenv()` or `install_TrackR()`")
   }
 
-  missing_packages <- setdiff(trackr_env$python_packages, reticulate::py_installed_packages()) %>%
+  missing_packages <- setdiff(trackr_env$python_packages, reticulate::py_list_packages()[,1]) %>%
     length()
 
   # Throw an error if environment requirements are not met

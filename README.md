@@ -1,23 +1,30 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# AnimalTrackR
-
-<!-- badges: start -->
-<!-- badges: end -->
+# AnimalTrackR <img src="man/figures/logo.png" align="right" height="130" alt="" />
 
 AnimalTrackR provides a simple interface to YOLOv8 to allow users to
-train animal detection models to aid large scale beavioural analyses.
+train animal detection models to aid large scale behavioural analyses.
+
+*The package is still in development and most features are not yet
+available.*
 
 ## Installation
 
-FFMPEG NEEDED!!!!!
-
-You can install the development version of AnimalTrackR like so:
+You can install the development version of AnimalTrackR like so (you
+will need the devtools package installed):
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+devtools::install_github("mariolambrette/AnimalTrackR")
+
+library(AnimalTrackR)
 ```
+
+FFmpeg is a critical dependency of `AnialTrackR`. Please ensure that you
+have FFmpeg installed on your machine before attempting to use
+`AnimalTrackR` for image analysis. To install go to this link:
+<https://ffmpeg.org/download.html> and follow the instructions to
+install the correct version of FFmpeg for your operating system.
 
 ## Intructions
 
@@ -110,9 +117,9 @@ detection model.
 
 The first step is to extract still images from your experimental
 footage. This step will require careful consideration of your
-experimental design and the footage you have. TO have the best chance of
-devloping accurate detection models the training images used should
-accurately reflect variability in your exerimental data. For some
+experimental design and the footage you have. To have the best chance of
+developing accurate detection models the training images used should
+accurately reflect variability in your experimental data. For some
 experiments with very little variability between video clips this may be
 very straightforward but for others where there may be many different
 tank/cage set ups and variable backgrounds this may be more complex.
@@ -121,8 +128,8 @@ The basic premise for this step is to create a stratified sample with
 the different experimental groups. Due to the potential for massive
 variation in user’s file structures and experimental designs the process
 of grouping video files sensibly is left to users. The image extraction
-function `IMAGEEXTRACTIONFUNCTION`(described in detail further down)
-takes a named list as in input. This list’s structure is as follows:
+function `extract_Images()`(described in detail further down) takes a
+named list as in input. This list’s structure is as follows:
 
 ``` r
 
@@ -143,13 +150,13 @@ video_files <- list(
 )
 ```
 
-The `IMAGEEXTRACTIONFUNCTION` also takes another lis as an argument
-which defines the weights to apply to each group when performing a
-stratified sample. This argument is optional, by default the function
-will use the relative numbers of videos in each group to inform the
-weights to apply, however there may be instances where users want to
-change this. This argument to do this should be of the same structure as
-the `video_files` list:
+The `extract_Images()` also takes another list as an argument which
+defines the weights to apply to each group when performing a stratified
+sample. This argument is optional, by default the function will use the
+relative numbers of videos in each group to inform the weights to apply,
+however there may be instances where users want to change this. This
+argument to do this should be of the same structure as the `video_files`
+list:
 
 ``` r
 
@@ -160,5 +167,32 @@ group_weights <- list(
 ```
 
 The sum of the weights supplied must be equal to 1 and the names of the
-groups must be the same in these two lists or `IMAGEEXTRACTIONFUNCTION`
-will throw an error.
+groups must be the same in these two lists or `extract_Images()` will
+throw an error.
+
+Run `extract_Images()` as follows:
+
+``` r
+
+extract_Images(
+  videos = video_files,
+  group_weights = group_weights,
+  nimgs = 1600
+)
+```
+
+The `nimgs` argument defines the total number of images that will be
+exported from the specified video. The default number (1600) will
+provide around 1000 training images and 300 images each for testing and
+validation. In many cases this will be sufficient to train highly
+effective models, but more complex experimental scenes may require a
+larger number of training images, particularly if the backgrounds
+employed are highly variable. The recommendation is to start with the
+default number and start training detection models, then add further
+images if model performance is poor.
+
+`extract_Images()` will populate the ‘ToAnnotate’ folder within the
+project directory. Once this has happened you are ready to start
+annotating images for training and testing detection models.
+
+### Image annotation
