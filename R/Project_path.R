@@ -20,16 +20,16 @@ get_Project <- function(){
 init_Project <- function(path = "Project"){ # Path to project root directory
 
   # Construct an absolute file path from the users input
-  path <- tools::file_path_as_absolute(path)
+  path <- normalizePath(path, mustWork = F)
 
   # Check if any folders exist in the parent directory with the same name and
   # and increment the name if so
   dirs <- list.dirs(
     dirname(path),
-    pattern = basename(path),
     recursive = F,
     full.names = F
-  )
+  ) %>%
+    grep(basename(path), ., value = T)
   if(length(dirs) > 0){
     path <- paste0(
       path,

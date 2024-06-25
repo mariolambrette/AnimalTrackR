@@ -21,7 +21,7 @@
     system.file("python", package = packageName()),
     delay_load = TRUE
   )
-  utils::assignInMyNamespace("py_extractImages", py_extractImages)
+ # utils::assignInMyNamespace("py_extractImages", py_extractImages)
 
 }
 
@@ -35,3 +35,6 @@ trackr_env$python_packages <- c("ultralytics",
                                 "opencv-python")
 trackr_env$proj <- NULL
 trackr_env$os <- NULL
+
+# Python bindings
+py_extractImages <- NULL
