@@ -21,29 +21,29 @@
 #' @param envname Character string. The name of the virtual environment to create
 #' @param new_env Boolean. Whether or not the envname has been changed from the default 'animaltrackr'
 #'
-#' @returns
+#' @returns Returns a message in the console confirming successful installation
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' # Default behaviour (reccomended)
 #' library(AnimalTrackR)
 #' install_TrackR() # Not run again on this machine
 #'
 #' # Custom environments (Not reccomended)
-#' \dontrun{
 #' # On first usage of AnimalTrackR:
 #' library(AnimalTrackR)
 #' install_TrackR(envname = 'somename')
 #'
 #' # On subsequent usages of AnimalTrackR:
 #' library(AnimalTrackR)
-#' TrackR_virtualenv(anvname = 'somename')
+#' TrackR_virtualenv(envname = 'somename')
 #'
 #' }
 #'
 install_TrackR <-
   function(envname = 'animaltrackr',
-           new_env = identical(env_name, "animaltrackr")){
+           new_env = identical(envname, "animaltrackr")){
 
     # If the package virtual environment already exists delete it so that a fresh one
     # can be created
@@ -84,5 +84,5 @@ install_TrackR <-
     # Make sure reticulate is using the created virtual environment
     reticulate::use_virtualenv(envname)
 
-
+    cat("\033[31mAnimalTrackR successfully installed.\033[0m\n")
   }

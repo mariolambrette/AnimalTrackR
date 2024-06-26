@@ -3,7 +3,7 @@ import random
 import cv2 as cv
 
 
-def extract_Images_py(vids, weights, n, path, vid_ext):
+def extract(vids, weights, n, path, vid_ext):
     # supported extensions
     exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
 

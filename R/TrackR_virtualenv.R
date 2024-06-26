@@ -11,11 +11,13 @@
 #'
 #' @param envname Character string. Name of the virtual environemnt to connect to.
 #'
-#' @return
+#' @return Invisibly returns TRUE
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' TrackR_virtualenv('animaltrackr')
+#' }
 
 TrackR_virtualenv <- function(envname){
 
@@ -32,10 +34,22 @@ TrackR_virtualenv <- function(envname){
     stop("No virtual environments with this name.\n
          Check name or use `install_TrackR()` to create a virtual environment")
   }
+
+  invisible(T)
 }
 
 
-## Function for checking active python environment meet requirement - internal non-exported function
+#' Check the current TrackR environment
+#'
+#' @description
+#' Checks the active python environment meets the requirements to run
+#' AnimalTrackR. Internal, non-exported function.
+#'
+#' @noRd
+#'
+#' @return TRUE if the environment meets the requirements
+#'
+
 check_TrackR_env <- function(){
   # Check the python version and installed packages in the specified environment
   py_version <- reticulate::py_discover_config()$python_version
@@ -45,7 +59,7 @@ check_TrackR_env <- function(){
          Please set or create a python environment with `TrackR_virtualenv()` or `install_TrackR()`")
   }
 
-  missing_packages <- setdiff(trackr_env$python_packages, reticulate::py_list_packages()[,1]) %>%
+  missingpackages <- setdiff(trackr_env$python_packages, reticulate::py_list_packages()[,1]) %>%
     length()
 
   # Throw an error if environment requirements are not met
@@ -53,4 +67,6 @@ check_TrackR_env <- function(){
     stop("Virtual environment does not meet requirements.\n
            Please use `install_TrackR()` to create a suitable virtual environment")
   }
+
+  return(TRUE)
 }
