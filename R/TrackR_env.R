@@ -42,7 +42,7 @@ TrackR_virtualenv <- function(envname){
 #' Check the current TrackR environment
 #'
 #' @description
-#' Checks the active python environment meets the requirements to run
+#' Checks the active conda environment meets the requirements to run
 #' AnimalTrackR. Internal, non-exported function.
 #'
 #' @noRd
@@ -55,8 +55,7 @@ check_TrackR_env <- function(){
   py_version <- reticulate::py_discover_config()$python_version
 
   if(is.null(py_version)){
-    stop("No python environment found.\n
-         Please set or create a python environment with `TrackR_virtualenv()` or `install_TrackR()`")
+    return(F)
   }
 
   missingpackages <- setdiff(trackr_env$python_packages, reticulate::py_list_packages()[,1]) %>%

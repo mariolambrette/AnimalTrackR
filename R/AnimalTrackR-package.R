@@ -4,16 +4,23 @@
 ## usethis namespace: start
 #' @import magrittr
 #' @importFrom magrittr %>%
+#' @importFrom reticulate conda_create
+#' @importFrom reticulate conda_remove
+#' @importFrom reticulate condaenv_exists
 #' @importFrom reticulate import_from_path
+#' @importFrom reticulate install_miniconda
+#' @importFrom reticulate miniconda_path
 #' @importFrom reticulate py_discover_config
 #' @importFrom reticulate py_list_packages
 #' @importFrom reticulate py_versions_windows
 #' @importFrom reticulate r_to_py
+#' @importFrom reticulate use_condaenv
 #' @importFrom reticulate use_virtualenv
 #' @importFrom reticulate virtualenv_exists
 #' @importFrom reticulate virtualenv_remove
 #' @importFrom tools file_path_as_absolute
 #' @importFrom utils assignInMyNamespace
+#' @importFrom utils menu
 #' @importFrom utils packageName
 ## usethis namespace: end
 NULL

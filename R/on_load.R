@@ -10,7 +10,6 @@
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
-
 }
 
 
