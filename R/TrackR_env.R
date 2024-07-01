@@ -22,12 +22,17 @@
 TrackR_virtualenv <- function(envname){
 
   # Check the specified environment exists
-  if(reticulate::virtualenv_exists(envname)){
-    # Use the specified environment
-    reticulate::use_virtualenv(envname)
+  if(reticulate::condaenv_exists(envname)){
 
-    # Check the enviornment
-    check_TrackR_env()
+    # Check the environment and if it meets the requirements activate it
+    if(check_TrackR_env()){
+      # Use the specified environment
+      reticulate::use_condaenv(envname)
+    } else{
+      stop("The specified conda environment does not meet the neccesary requirements.\n
+            Please use a different conda environment, or create a suitable environment \n
+            using `create_TrackR_env()`")
+    }
 
   } else{
     # Throw an error if the virtual environment does not exist
@@ -47,12 +52,12 @@ TrackR_virtualenv <- function(envname){
 #'
 #' @noRd
 #'
-#' @return TRUE if the environment meets the requirements
+#' @return TRUE if the environment meets the requirements, or FALSE if not.
 #'
 
 check_TrackR_env <- function(){
   # Check the python version and installed packages in the specified environment
-  py_version <- reticulate::py_discover_config()$python_version
+  py_version <- reticulate::py_discover_config()$version
 
   if(is.null(py_version)){
     return(F)
@@ -63,9 +68,8 @@ check_TrackR_env <- function(){
 
   # Throw an error if environment requirements are not met
   if(py_version != "3.9" | missingpackages != 0){
-    stop("Virtual environment does not meet requirements.\n
-           Please use `install_TrackR()` to create a suitable virtual environment")
+    return(F)
   }
 
-  return(TRUE)
+  return(T)
 }
