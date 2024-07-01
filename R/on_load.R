@@ -17,9 +17,9 @@
 trackr_env <- new.env(parent = emptyenv())
 trackr_env$project <- NULL
 trackr_env$python_packages <- c("ultralytics",
-                                "torchaudio",
+                               # "torchaudio",
                                 "torchvision",
-                                "opencv-python")
+                                "opencv")
 trackr_env$proj <- NULL
 trackr_env$os <- NULL
 
