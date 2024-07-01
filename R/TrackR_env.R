@@ -9,17 +9,17 @@
 #' dependencies installed or the function gives an error.
 #'
 #'
-#' @param envname Character string. Name of the virtual environemnt to connect to.
+#' @param envname Character string. Name of conda environemnt to connect to.
 #'
 #' @return Invisibly returns TRUE
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' TrackR_virtualenv('animaltrackr')
+#' set_TrackR_condaenv('animaltrackr')
 #' }
 
-TrackR_virtualenv <- function(envname){
+set_TrackR_condaenv <- function(envname){
 
   # Check the specified environment exists
   if(reticulate::condaenv_exists(envname)){

@@ -112,20 +112,15 @@ create_TrackR_env <- function(envname = 'animaltrackr'){
     python_version = "3.9"
   )
 
-  # Check and activate envrionment
-  if(check_TrackR_env()){
-    tryCatch({
-      reticulate::use_condaenv(envname, required = TRUE)
-      message(paste0("Successfuly activated conda enviroment ", envname))
-    }, error = function(e){
-      message(paste0("Failed to acitvate conda enviroment: ", envname))
-      message("Error message:", e$message)
-      message("Try restarting your R session and trying again.")
-    })
-  } else {
-    stop(paste0("Conda environment: ", envname, " Does not meet requirements.\n
-                 Please try again."))
-  }
+  # Check and activate environment
+  tryCatch({
+    reticulate::use_condaenv(envname, required = TRUE)
+    message(paste0("Successfuly activated conda enviroment ", envname))
+  }, error = function(e){
+    message(paste0("Failed to acitvate conda enviroment: ", envname))
+    message("Error message:", e$message)
+    message("Try restarting your R session and trying again.")
+  })
 
   invisible(T)
 }
