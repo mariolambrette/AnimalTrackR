@@ -83,6 +83,12 @@ init_Project <- function(path = "Project"){ # Path to project root directory
   # Construct an absolute file path from the users input
   path <- normalizePath(path, mustWork = F)
 
+  # Check for writing permissions in project path
+  if(file.access(path, 2) != 0){
+    stop("No write permissions for selected path.\n
+          Please check permissions and try again.")
+  }
+
   # Check if any folders exist in the parent directory with the same name and
   # and increment the name if so
   dirs <- list.dirs(
@@ -101,6 +107,12 @@ init_Project <- function(path = "Project"){ # Path to project root directory
 
   # Create the project directory and the relevant subdirectories
   dir.create(path)
+
+  if(!dir.exists(path)){
+    stop("Error creating project directory.\n
+          Please check file paths and try again")
+  }
+
   dir.create(file.path(path, "ToAnnotate"))
   dir.create(file.path(path, "YOLO"))
   dir.create(file.path(path, "YOLO", "Train"))

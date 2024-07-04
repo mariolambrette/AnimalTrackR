@@ -28,10 +28,10 @@
     packageStartupMessage(
       "Default conda environment not found.\n
        If this is your first time using the `AnimalTrackR on this machine,\n
-       please create a suitable environment using `create_TrackR_env()`. \n
+       please create a suitable environment using `create_TrackR_condaenv()`. \n
        \n
        If you have already created an environment with a custom name you can \n
-       activate it using `set_TrackR_env()`."
+       activate it using `set_TrackR_condaenv()`."
     )
   }
 }

@@ -8,7 +8,6 @@ def TestingPython():
 
 def extract(vids, weights, n, path, vid_ext):
     
-    print("in Python")
     # supported extensions
     exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
 

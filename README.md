@@ -309,7 +309,7 @@ Take the below image:
 
 <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
 
-<img src="man/figures/TwoTrout.JPG" height="330" alt="Image of two trout in different tanks, only one of which is a target for detection." />
+<img src="man/figures/TwoTrout.JPG" height="280" alt="Image of two trout in different tanks, only one of which is a target for detection." />
 
 </div>
 
