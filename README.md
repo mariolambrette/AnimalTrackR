@@ -271,7 +271,7 @@ Sense](https://www.makesense.ai/). Navigate to the link and press the
 You will be presented with a box into which you can upload images to
 annotate:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/MakeSense_FileUpload.JPG" height="230" alt="Make Sense file upload dialog box" />
 
@@ -288,7 +288,7 @@ folder. From the project root directory go to YOLO/configs and select
 the ‘labels.txt’ file. You will see a message saying three labels have
 been found.
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/MakeSense_Labels.JPG" height="330" alt="Make Sense file upload dialog box" />
 
@@ -307,7 +307,7 @@ The three labels are as follows:
 
 Take the below image:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/TwoTrout.JPG" height="280" alt="Image of two trout in different tanks, only one of which is a target for detection." />
 
@@ -316,7 +316,7 @@ Take the below image:
 The target animal is on the right but there is another almost identical
 animal on the left. This image should be labelled as follows:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/TwoTrout_annotated.JPG" height="330" alt="Annotated version of the previous image." />
 
@@ -340,7 +340,7 @@ number of annotated training images for optimal model performance.*
 
 The below image contains no target objects:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/EmptyImage.JPG" height="330" alt="Image of an empty fish tank." />
 
@@ -348,7 +348,7 @@ The below image contains no target objects:
 
 It should be labelled as follows:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/EmptyImage_annotated.JPG" height="330" alt="Empty tank with random bounding box." />
 
@@ -373,7 +373,7 @@ There are a few basic principles to follow when annotating you images:
 2.  Fit bounding boxes as tightly as possible around target objects.
     - Bounding boxes should fully surround the target object but include
       minimal space around it. See the images below:
-      <div style="text-align: center; margin-top: 20px; margin-bottom: 20px; margin-left: 20px;">
+      <div style="text-align: center; margin-top: 20px; margin-bottom: 30px; margin-left: 20px;">
 
       <img src="man/figures/Annotations_guide.JPG" height="280" alt="Examples of good and bad bounding boxes." />
 
@@ -395,7 +395,7 @@ session click the ‘Actions’ button in the top left corner of the screen
 and select the ‘Export Annotations’ option. You will be presented with
 the following dialog box:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
 
 <img src="man/figures/MakeSense_ExportImages.JPG" height="300" alt="Make Sense image export dialog box." />
 

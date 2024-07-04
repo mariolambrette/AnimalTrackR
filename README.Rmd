@@ -223,7 +223,7 @@ You are now ready to start annotating training images. In principle, you are fre
 
 You will be presented with a box into which you can upload images to annotate:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/MakeSense_FileUpload.JPG" height="230" alt="Make Sense file upload dialog box" />
 </div>
 
@@ -231,7 +231,7 @@ Click the box to select files and navigate to the 'ToAnnotate' folder in your pr
 
 You will now be presented with an an option to create labels. You should click the 'Load Labels from File' button and navigate to your project folder. From the project root directory go to YOLO/configs and select the 'labels.txt' file. You will see a message saying three labels have been found.
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/MakeSense_Labels.JPG" height="330" alt="Make Sense file upload dialog box" />
 </div>
 
@@ -245,13 +245,13 @@ The three labels are as follows:
 
 Take the below image:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/TwoTrout.JPG" height="280" alt="Image of two trout in different tanks, only one of which is a target for detection." />
 </div>
 
 The target animal is on the right but there is another almost identical animal on the left. This image should be labelled as follows:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/TwoTrout_annotated.JPG" height="330" alt="Annotated version of the previous image." />
 </div>
 
@@ -265,13 +265,13 @@ Not all datasets will have this problem, and if that is the case in your data yo
 
 The below image contains no target objects:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/EmptyImage.JPG" height="330" alt="Image of an empty fish tank." />
 </div>
 
 It should be labelled as follows:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/EmptyImage_annotated.JPG" height="330" alt="Empty tank with random bounding box." />
 </div>
 
@@ -286,7 +286,7 @@ There are a few basic principles to follow when annotating you images:
   
 2. Fit bounding boxes as tightly as possible around target objects.
    + Bounding boxes should fully surround the target object but include minimal space around it. See the images below:
-   <div style="text-align: center; margin-top: 20px; margin-bottom: 20px; margin-left: 20px;">
+   <div style="text-align: center; margin-top: 20px; margin-bottom: 30px; margin-left: 20px;">
    <img src="man/figures/Annotations_guide.JPG" height="280" alt="Examples of good and bad bounding boxes." />
    </div>
 
@@ -298,7 +298,7 @@ There are a few basic principles to follow when annotating you images:
 
 Work your way through the uploaded images. At the end of your annotating session click the 'Actions' button in the top left corner of the screen and select the 'Export Annotations' option. You will be presented with the following dialog box:
 
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
   <img src="man/figures/MakeSense_ExportImages.JPG" height="300" alt="Make Sense image export dialog box." />
 </div>
 
