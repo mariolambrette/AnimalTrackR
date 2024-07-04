@@ -219,6 +219,12 @@ annotate:
 
 <img src="man/figures/MakeSense_FileUpload.JPG" align="left" height="200" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
 
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/MakeSense_FileUpload.JPG" height="230" alt="Make Sense file upload dialog box" />
+
+</div>
+
 Click the box to select files and navigate to the ‘ToAnnotate’ folder in
 your project directory. Click and drag the whole folder into the box on
 the screen and wait for the images to be loaded, then click the object
