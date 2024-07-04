@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# <img src="inst/Figures/logo.png" align="left" height="140" alt="AnimalTrackR Logo" style="margin-right: 20px;" /> AnimalTrackR
+# <img src="man/figures/logo.png" align="left" height="140" alt="AnimalTrackR Logo" style="margin-right: 20px;" /> AnimalTrackR
 
 AnimalTrackR provides a simple interface to YOLOv8 to allow users to
 train animal detection models to aid large scale behavioural analyses.
@@ -217,7 +217,7 @@ Sense](https://www.makesense.ai/). Navigate to the link and press the
 You will be presented with a box into which you can upload images to
 annotate:
 
-<img src="inst/Figures/MakeSense_FileUpload.JPG" align="left" height="160" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
+<img src="man/figures/MakeSense_FileUpload.JPG" align="left" height="200" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
 
 Click the box to select files and navigate to the ‘ToAnnotate’ folder in
 your project directory. Click and drag the whole folder into the box on
@@ -230,7 +230,7 @@ folder. From the project root directory go to YOLO/configs and select
 the ‘labels.txt’ file. You will see a message saying three labels have
 been found.
 
-<img src="inst/Figures/MakeSense_FileUpload.JPG" align="left" height="160" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
+<img src="man/figures/MakeSense_Labels.JPG" align="left" height="200" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
 
 The three labels are as follows: \* **Target**: Use this label for the
 target object in the frame (i.e. the animal you would like to track) \*
