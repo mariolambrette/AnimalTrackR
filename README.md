@@ -375,7 +375,12 @@ There are a few basic principles to follow when annotating you images:
 
 - Bounding boxes should fully surround the target object but include
   minimal space around it. See the images below:
-- GOOD VS BAD ANNOTATION
+
+- <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+  <img src="man/figures/Annotations_guide.JPG" height="280" alt="Examples of good and bad bounding boxes." />
+
+  </div>
 
 3.  Be consistent with class labels.
 

@@ -285,7 +285,9 @@ There are a few basic principles to follow when annotating you images:
   + Every frame that contains a target object (or a non-target but visually similar object) must be annotated. YOLO models use all non-annotated space on the frame as a 'negative' so by not annotating a target object you will train the model to not recognise them.
 2. Fit bounding boxes as tightly as possible around target objects.
   + Bounding boxes should fully surround the target object but include minimal space around it. See the images below:
-  + GOOD VS BAD ANNOTATION
+  + <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+  <img src="man/figures/Annotations_guide.JPG" height="280" alt="Examples of good and bad bounding boxes." />
+</div>
 3. Be consistent with class labels.
   + The target and non-target class labels need to be absolutely consistent across all of your training images (case sensitive). Do not edit the 'labels.txt' file.
 4. Label empty frames.
