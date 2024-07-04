@@ -115,5 +115,14 @@ init_Project <- function(path = "Project"){ # Path to project root directory
   dir.create(file.path(path, "YOLO", "Test", "labels"))
   dir.create(file.path(path, "YOLO", "Val", "labels"))
 
+  file.copy(
+    from = system.file("config", "classes.txt", package = "AnimalTrackR"),
+    to = file.path(path, "YOLO", "configs", "labels.txt")
+  )
+
   cat("\033[31mProject directory initialized.\033[0m\n")
+
+  set_Project(path)
+
+  return(invisible(T))
 }

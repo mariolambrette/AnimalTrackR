@@ -48,11 +48,16 @@ set_TrackR_condaenv <- function(envname){
 #'
 #' @description
 #' Checks the active conda environment meets the requirements to run
-#' AnimalTrackR. Internal, non-exported function.
-#'
-#' @noRd
+#' AnimalTrackR.
 #'
 #' @return TRUE if the environment meets the requirements, or FALSE if not.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' check_TrackR_env()
+#' }
+#'
 #'
 
 check_TrackR_env <- function(){

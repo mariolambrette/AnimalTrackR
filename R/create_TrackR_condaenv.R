@@ -50,7 +50,7 @@
 #' }
 #'
 
-create_TrackR_env <- function(envname = 'animaltrackr'){
+create_TrackR_condaenv <- function(envname = 'animaltrackr'){
 
   # If the conda environment exists ask the user if they want to delete and
   # recreate it

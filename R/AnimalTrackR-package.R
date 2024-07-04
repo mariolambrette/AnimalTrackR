@@ -3,7 +3,12 @@
 
 ## usethis namespace: start
 #' @import magrittr
+#' @importFrom dplyr filter
+#' @importFrom dplyr left_join
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
 #' @importFrom magrittr %>%
+#' @importFrom plyr llply
 #' @importFrom reticulate conda_create
 #' @importFrom reticulate conda_remove
 #' @importFrom reticulate condaenv_exists
@@ -19,8 +24,10 @@
 #' @importFrom reticulate virtualenv_exists
 #' @importFrom reticulate virtualenv_remove
 #' @importFrom tools file_path_as_absolute
+#' @importFrom tools file_path_sans_ext
 #' @importFrom utils assignInMyNamespace
 #' @importFrom utils menu
 #' @importFrom utils packageName
+#' @importFrom utils read.csv
 ## usethis namespace: end
 NULL

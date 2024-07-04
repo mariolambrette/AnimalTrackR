@@ -2,8 +2,13 @@ import os
 import random
 import cv2 as cv
 
+def TestingPython():
+  return(True)
+
 
 def extract(vids, weights, n, path, vid_ext):
+    
+    print("in Python")
     # supported extensions
     exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
 
@@ -32,7 +37,7 @@ def extract(vids, weights, n, path, vid_ext):
             vid_imgs = 1
 
         # Extract images from each video in group
-        for vid, vid_id in enumerate(vids[gr]):
+        for vid_id, vid in enumerate(vids[gr]):
 
             print(f"Extracting frames from {vid}")
 
