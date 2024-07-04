@@ -3,15 +3,17 @@
 
 # <img src="man/figures/logo.png" align="left" height="140" alt="AnimalTrackR Logo" style="margin-right: 20px;" /> AnimalTrackR
 
-AnimalTrackR provides a simple interface to YOLOv8 to allow users to
-train animal detection models to aid large scale behavioural analyses.
+`AnimalTrackR` provides a simple interface to
+[YOLOv8](https://docs.ultralytics.com/) to allow users to train animal
+detection models to aid large scale behavioural analyses of single
+animals in confined spaces.
 
 *The package is still in development and many features are not yet
 available.*
 
 ## Installation
 
-You can install the development version of AnimalTrackR like so (you
+You can install the development version of `AnimalTrackR` like so (you
 will need the devtools package installed):
 
 ``` r
@@ -20,15 +22,67 @@ devtools::install_github("mariolambrette/AnimalTrackR")
 library(AnimalTrackR)
 ```
 
-FFmpeg is a critical dependency of `AnialTrackR`. Please ensure that you
-have FFmpeg installed on your machine before attempting to use
-`AnimalTrackR` for image analysis. To install go to this link:
-<https://ffmpeg.org/download.html> and follow the instructions to
-install the correct version of FFmpeg for your operating system.
+Installation via `install.packages()` is not yet possible, but support
+for this method will be added in due course.
+
+### Dependencies
+
+`AnimalTrackR` has multiple external dependencies, including python
+libraries and FFmpeg. For the vast majority of users the built-in
+`create_TrackR_condaenv()` function will handle all dependencies,
+however for users where this is not the case see the DEPENDENCIES
+DOCUMENTATION (vignette with description of all dependencies)
 
 ## Quick start guide
 
-…
+1.  Install AnimalTrackR
+2.  Create a suitable conda environment
+3.  Initialise a project
+4.  Extract training images from experimental footage
+5.  Annotate images
+6.  Run model training and validate performance
+7.  Deploy models
+
+``` r
+
+# 1. Install AnimalTrackR
+devtools::install_github("mariolambrette/AnimalTrackR")
+library(AnimalTrackR)
+
+# 2. Create a suitable conda environment
+create_TrackR_condaenv()
+
+# 3. Initialise a project
+init_Project(path = "path/to/AnimalTrackR-projects/PROJECT-NAME")
+
+# 4. Extract training images from experimental footage
+extract_Images(
+ videos = list(
+   Group1 = list(
+     "video1.mp4",
+     "video2.mp4",
+     "video3.mp4"
+   ),
+   Group2 = list(
+     "video4.mp4",
+     "video5.mp4",
+     "video6.mp4"
+   )
+ ),
+ group_weights = list(
+   Group1 = 0.3,
+   Group2 = 0.7
+ ),
+ nimgs = 1600
+)
+
+# 5. Annotate images - https://www.makesense.ai/
+SaveAnnotations(csv = "path/to/Annotations.csv")
+
+### IN DEVELOPMENT ###
+# 6. Run model training and validate performance
+# 7. Deploy models
+```
 
 ## Intructions
 
@@ -84,9 +138,9 @@ provided in `AnimalTrackR`
 ### First Usage:
 
 AnimalTrackR relies heavily on python to execute image processing tasks.
-Specifically, it uses a python 3.9 conda. This means that when you first
-install the package you will need to run the following command to create
-this environment:
+Specifically, it uses a python 3.9 conda environment. This means that
+when you first install the package you will need to run the following
+command to create the environment:
 
 ``` r
 
@@ -111,15 +165,13 @@ information on custom environments.
 
 ### Starting a project
 
-Now that you have attached `AnimalTrackR` to your R session and created
-a suitable conda environment to handle image processing tasks you will
-need to start a project. An `AnimalTrackR` project is contained within a
+Next, you need to initiate an AnimalTrackR project, contained within a
 directory that has a [specific structure](#file-structure) to support
 the image annotation process and allow for seamless integration with
-other YOLO development pipelines. Use the `init_Project()` function to
-initiate a new project by providing the path to the project root
-directory. Providing just a project name (as in the example below) will
-create a project folder with that name in the current working directory.
+other YOLO development pipelines. Use the `init_Project()` function by
+providing the path to the project root directory. Providing just a
+project name (as in the example below) will create a project folder with
+that name in the current working directory.
 
 ``` r
 
@@ -128,20 +180,21 @@ init_Project(path = 'MyProject')
 
 ### Extracting training images
 
-The first step is to extract still images from experimental footage.
-This step requires careful consideration of your experimental design and
-the footage you have. Training images should accurately reflect
-variability in your experimental data. For some experiments with very
-little variability between video clips this may be very straightforward
-but for others where there may be many different tank/cage set ups and
-variable backgrounds this may be more complex.
+The first step in model development is to extract still images from
+experimental footage. This requires careful consideration of your
+experimental design and the footage you have. Training images should
+accurately reflect variability in your experimental data. For some
+experiments with very little variability between recordings this may be
+very straightforward but for others where there may be many different
+tank/cage set ups and variable backgrounds this may be more complex.
 
 The basic premise for this step is to create a stratified sample with
 the different experimental groups. Due to the potential for massive
 variation in user’s file structures and experimental designs the process
-of grouping video files is left to users. The image extraction function
-`extract_Images()`(described in detail below) takes a named list as in
-input. This list’s structure is as follows:
+of grouping video files is left to users. `extract_Images()`(described
+in detail below) takes a named list as an input. This list’s structure
+is as follows, where each group contains recordings that are related in
+appearance and experimental group:
 
 ``` r
 
@@ -204,7 +257,8 @@ training detection models, then add further images if model performance
 is poor.
 
 `extract_Images()` will populate the ‘/ToAnnotate’ folder within the
-project directory with .jpg files extracted from experimental footage.
+project directory with ’\*.jpg’ files extracted from experimental
+footage.
 
 ### Image annotation
 
@@ -216,8 +270,6 @@ Sense](https://www.makesense.ai/). Navigate to the link and press the
 
 You will be presented with a box into which you can upload images to
 annotate:
-
-<img src="man/figures/MakeSense_FileUpload.JPG" align="left" height="200" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
 
 <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
 
@@ -236,16 +288,18 @@ folder. From the project root directory go to YOLO/configs and select
 the ‘labels.txt’ file. You will see a message saying three labels have
 been found.
 
-<br/>
-<img src="man/figures/MakeSense_Labels.JPG" align="left" height="300" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />  
-<br/>
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/MakeSense_Labels.JPG" height="330" alt="Make Sense file upload dialog box" />
+
+</div>
 
 The three labels are as follows:
 
-- **Target**: Use this label for the target object in the frame
-  (i.e. the animal you would like to track).
-- **ZZZ**: Use this for any non-target objects in the frame that are
-  visually similar to the target object (more details below).
+- **Target**: Tthe target object in the frame (i.e. the animal you would
+  like to track).
+- **ZZZ**: Any non-target objects in the frame that are visually similar
+  to the target object (more details below).
 - **Empty**: Use this label on a random bounding box in any frames that
   do not contain the target animal (more details below).
 
@@ -253,13 +307,20 @@ The three labels are as follows:
 
 Take the below image:
 
-TROUT IMAGE WITH TWO FISH IN
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
 
-The target animal is on the RIGHT/LEFT but there is another almost
-identical animal on the RIGHT/LEFT. This image should be labelled as
-follows:
+<img src="man/figures/TwoTrout.JPG" height="330" alt="Image of two trout in different tanks, only one of which is a target for detection." />
 
-ANNOTATED VERSION OF IMAGE ABOVE
+</div>
+
+The target animal is on the right but there is another almost identical
+animal on the left. This image should be labelled as follows:
+
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/TwoTrout_annotated.JPG" height="330" alt="Annotated version of the previous image." />
+
+</div>
 
 The target fish is annotated with the ‘Target’ label, while the
 non-target is annotated with the ‘ZZZ’ label. During training this will
@@ -279,11 +340,19 @@ number of annotated training images for optimal model performance.*
 
 The below image contains no target objects:
 
-EMPTY FRAME
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/EmptyImage.JPG" height="330" alt="Image of an empty fish tank." />
+
+</div>
 
 It should be labelled as follows:
 
-ANNOTATED EMPTY FRAME WITH RANDOM BOUNDING BOX
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/EmptyImage_annotated.JPG" height="330" alt="Empty tank with random bounding box." />
+
+</div>
 
 This ensures that a representative number of empty frames are added to
 the model training data (the bounding boxes themselves will be deleted
@@ -327,7 +396,11 @@ session click the ‘Actions’ button in the top left corner of the screen
 and select the ‘Export Annotations’ option. You will be presented with
 the following dialog box:
 
-EXPORT IMAGES JPG
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+
+<img src="man/figures/MakeSense_ExportImages.JPG" height="300" alt="Make Sense image export dialog box." />
+
+</div>
 
 Select the ‘Single CSV file’ option and click export. A csv file will be
 downloaded with the following columns:

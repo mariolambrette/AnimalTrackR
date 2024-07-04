@@ -15,3 +15,7 @@ Imports:
     reticulate,
     tools,
     utils
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
