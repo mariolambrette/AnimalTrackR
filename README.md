@@ -230,14 +230,18 @@ folder. From the project root directory go to YOLO/configs and select
 the ‘labels.txt’ file. You will see a message saying three labels have
 been found.
 
-<img src="man/figures/MakeSense_Labels.JPG" align="left" height="200" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />
+<br/>
+<img src="man/figures/MakeSense_Labels.JPG" align="left" height="300" alt="Make Sense file upload dialog box" style="margin-right: 20px;" />  
+<br/>
 
-The three labels are as follows: \* **Target**: Use this label for the
-target object in the frame (i.e. the animal you would like to track) \*
-**ZZZ**: Use this for any non-taget objects in the frame that are
-visually similar to the target object (more details below) \* **Empty**:
-Use this label on a random bounding box in any frames that do not
-contain the target animal (more details below)
+The three labels are as follows:
+
+- **Target**: Use this label for the target object in the frame
+  (i.e. the animal you would like to track).
+- **ZZZ**: Use this for any non-target objects in the frame that are
+  visually similar to the target object (more details below).
+- **Empty**: Use this label on a random bounding box in any frames that
+  do not contain the target animal (more details below).
 
 ***Non-target objects***
 
