@@ -35,13 +35,13 @@ DOCUMENTATION (vignette with description of all dependencies)
 
 ## Quick start guide
 
-1.  Install AnimalTrackR
-2.  Create a suitable conda environment
-3.  Initialise a project
-4.  Extract training images from experimental footage
-5.  Annotate images
-6.  Run model training and validate performance
-7.  Deploy models
+1.  Install AnimalTrackR.
+2.  Create a suitable conda environment.
+3.  Initialise a project.
+4.  Extract training images from experimental footage.
+5.  Annotate images.
+6.  Run model training and validate performance.
+7.  Deploy models.
 
 ``` r
 
@@ -88,7 +88,7 @@ SaveAnnotations(csv = "path/to/Annotations.csv")
 
 ### Overview
 
-`AnimalTrackR` provides a simple end-to-end pipeline for using [YOLOv8
+`AnimalTrackR` provides an end-to-end pipeline for using [YOLOv8
 detection models](https://docs.ultralytics.com/tasks/detect/) to track
 an individual animal in captivity for behavioural analyses. Broadly, it
 allows you to [sample frames](#extracting-training-images) from the
@@ -131,16 +131,16 @@ development pipelines. The structure is as follows:
         └── Project2
             └── ...
 
-Most users will never need to interact directly with the vast majority
-of this file structure, it is created and managed by helper functions
+Most users will never need to interact directly with the majority of
+this file structure, it is created and managed by helper functions
 provided in `AnimalTrackR`
 
 ### First Usage:
 
-AnimalTrackR relies heavily on python to execute image processing tasks.
-Specifically, it uses a python 3.9 conda environment. This means that
-when you first install the package you will need to run the following
-command to create the environment:
+`AnimalTrackR` relies on python to execute image processing tasks.
+Specifically, it uses a python 3.9 conda environment. When you first
+install the package you will need to run the following command to create
+the environment:
 
 ``` r
 
@@ -167,11 +167,11 @@ information on custom environments.
 
 Next, you need to initiate an AnimalTrackR project, contained within a
 directory that has a [specific structure](#file-structure) to support
-the image annotation process and allow for seamless integration with
-other YOLO development pipelines. Use the `init_Project()` function by
-providing the path to the project root directory. Providing just a
-project name (as in the example below) will create a project folder with
-that name in the current working directory.
+the image annotation process and allow for integration with YOLO
+development pipelines. Use the `init_Project()` function by providing
+the path to the project root directory. Providing just a project name
+(as in the example below) will create a project folder with that name in
+the current working directory.
 
 ``` r
 
@@ -182,18 +182,16 @@ init_Project(path = 'MyProject')
 
 The first step in model development is to extract still images from
 experimental footage. This requires careful consideration of your
-experimental design and the footage you have. Training images should
-accurately reflect variability in your experimental data. For some
-experiments with very little variability between recordings this may be
-very straightforward but for others where there may be many different
-tank/cage set ups and variable backgrounds this may be more complex.
+footage and experimental design. Training images should accurately
+reflect variability in your experimental data. For some experiments with
+very little variability between recordings this may be very
+straightforward, but for more complex experiments/datasets with variable
+backgrounds it may be a more complex process.
 
 The basic premise for this step is to create a stratified sample with
-the different experimental groups. Due to the potential for massive
-variation in user’s file structures and experimental designs the process
-of grouping video files is left to users. `extract_Images()`(described
-in detail below) takes a named list as an input. This list’s structure
-is as follows, where each group contains recordings that are related in
+the different experimental groups. `extract_Images()`(described in
+detail below) takes a named list as an input. This list’s structure is
+as follows, where each group contains recordings that are related in
 appearance and experimental group:
 
 ``` r
@@ -246,19 +244,17 @@ extract_Images(
 )
 ```
 
-`nimgs` defines the total number of images that will be exported from
-the specified video. The default number (1600) will provide around 1000
-training images and 300 images each for testing and validation. In many
-cases this will be sufficient to train highly effective models, but more
-complex experimental scenes may require a larger number of training
-images, particularly if the backgrounds employed are highly variable.
-The recommendation is to start with the default number and start
-training detection models, then add further images if model performance
-is poor.
+`nimgs` defines the total number of images that will be exported. The
+default number (1600) will provide around 1000 training images and 300
+images each for testing and validation. In many cases this will be
+sufficient to train effective models, but more complex experimental
+scenes may require a larger number of training images, particularly if
+the backgrounds employed are highly variable. The recommendation is to
+start with the default number and start training detection models, then
+add further images if model performance is poor.
 
-`extract_Images()` will populate the ‘/ToAnnotate’ folder within the
-project directory with ’\*.jpg’ files extracted from experimental
-footage.
+`extract_Images()` will populate the ‘/ToAnnotate’ folder in the project
+directory with ’\*.jpg’ files extracted from experimental footage.
 
 ### Image annotation
 
@@ -277,10 +273,10 @@ annotate:
 
 </div>
 
-Click the box to select files and navigate to the ‘ToAnnotate’ folder in
-your project directory. Click and drag the whole folder into the box on
-the screen and wait for the images to be loaded, then click the object
-detection button.
+Click the box to select files and navigate to the ‘/ToAnnotate’ folder
+in your project directory. Click and drag the whole folder into the box
+on the screen and wait for the images to be loaded, then click the
+object detection button.
 
 You will now be presented with an an option to create labels. You should
 click the ‘Load Labels from File’ button and navigate to your project
@@ -296,7 +292,7 @@ been found.
 
 The three labels are as follows:
 
-- **Target**: Tthe target object in the frame (i.e. the animal you would
+- **Target**: The target object in the frame (i.e. the animal you would
   like to track).
 - **ZZZ**: Any non-target objects in the frame that are visually similar
   to the target object (more details below).
@@ -326,8 +322,8 @@ The target fish is annotated with the ‘Target’ label, while the
 non-target is annotated with the ‘ZZZ’ label. During training this will
 allow the model to learn how to distinguish between target and
 non-target objects in the frame based on factors such as relative
-position and size. It is crucial that non-target objects are anotated in
-this manner, not annotating them could have significant deletereous
+position and size. It is crucial that non-target objects are annotated
+in this manner, not annotating them could have significant deleterious
 effects on model performance.
 
 Not all datasets will have this problem, and if that is the case in your
@@ -362,14 +358,14 @@ detections during model deployment.
 
 ***Annotation guidelines***
 
-There are a few basic principles to follow when annotating you images:
+There are a few basic principles to follow when annotating your images:
 
 1.  Annotate every object of interest in the frame.
     - Every frame that contains a target object (or a non-target but
       visually similar object) must be annotated. YOLO models use all
       non-annotated space on the frame as a ‘negative’ so by not
       annotating a target object you will train the model to not
-      recognise them.
+      recognise it.
 2.  Fit bounding boxes as tightly as possible around target objects.
     - Bounding boxes should fully surround the target object but include
       minimal space around it. See the images below:
@@ -413,8 +409,8 @@ downloaded with the following columns:
 - **image_width:** The width of the image
 - **image_height:** The height of the image
 
-*Note that all units are in pixels and as is the default in computer
-vision the origin for coordinates is the top left corner of the image*
+*Note that all units are in pixels and, as is the default in computer
+vision, the origin for coordinates is the top left corner of the image*
 
 If you have used a different annotation tool, or have pre-existing
 annotations you will need to convert the annotations into this csv
