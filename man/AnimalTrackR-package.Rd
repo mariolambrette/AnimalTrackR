@@ -6,6 +6,8 @@
 \alias{AnimalTrackR-package}
 \title{AnimalTrackR: YOLO-based tracking of animals in captivity for behavioural analysis}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 What the package does (one paragraph).
 }
 \author{
