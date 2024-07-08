@@ -59,11 +59,24 @@ SaveAnnotations <- function(csv){
       set <- sets$set[sets$image_name == name][1]
       annos <- annots %>%
         dplyr::filter(image_name == name) %>%
-        dplyr::mutate(lines = paste(index, bbox_x, bbox_y, bbox_width, bbox_height, sep = " ")) %>%
-        dplyr::select(lines)
+        dplyr::mutate(lines = paste(index, bbox_x, bbox_y, bbox_width, bbox_height, sep = " "))
+
+      if(nrow(annos) > 1){
+        # Check if more than one target is annotated
+        if(sum(annos$label_name == "Target") > 1){
+          message(paste0("Skipping image: ", name, ". Contains more than 1 target annotation."))
+          return(invisible(T))
+        }
+
+        # Check if 'Empty' Empty appears alongside other annotations
+        if("Empty" %in% annos$label_name){
+          message(paste0("Skipping image: ", name, ". 'Empty' label is not alone."))
+          return(invisible(T))
+        }
+      }
 
       # Call the SaveImage function
-      SaveImage(name, set, annos)
+      SaveImage(name, set, annos %>% dplyr::select(lines))
     },
     .progress = "text"
   )
