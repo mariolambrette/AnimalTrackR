@@ -9,7 +9,7 @@ def TestingPython():
 def extract(vids, weights, n, path, vid_ext):
     
     # supported extensions
-    exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
+    exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.mts']
 
     # Add custom extension - may fail later on if incompatible with opencv
     if vid_ext is not None:
