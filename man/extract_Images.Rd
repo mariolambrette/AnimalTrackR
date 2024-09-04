@@ -60,8 +60,8 @@ more images.}
 \item{vid_ext}{Character. The file extension of the video files.
 
 If the video file extension is one of : '.mp4', '.avi', '.mov', '.mkv', '.wmv',
-'.flv', '.webm', this parameter cna be ignored. In other cases users should
-provide the file extension here.
+'.flv', '.webm', or '.mts' this parameter can be ignored. In other cases users
+should provide the file extension here.
 
 The above list of formats are fully supported, other formats are also likely
 to be supported but some features may fail so users should proceed with caution.

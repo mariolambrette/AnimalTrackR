@@ -3,6 +3,7 @@
 
 ## usethis namespace: start
 #' @import magrittr
+#' @importFrom data.table fread
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
 #' @importFrom dplyr mutate

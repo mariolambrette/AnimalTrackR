@@ -10,7 +10,14 @@
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
+
+  py_BehaviourVis <<- reticulate::import_from_path(
+    "behaviour_vis_py",
+    system.file("python", package = pkgname),
+    delay_load = TRUE
+  )
 }
+
 
 
 # package environment variables
@@ -25,3 +32,4 @@ trackr_env$os <- NULL
 
 # Python bindings
 py_extractImages <- NULL
+py_BehaviourVis <- NULL

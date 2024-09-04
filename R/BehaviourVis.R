@@ -1,0 +1,100 @@
+#' Visualise behavioural states via coloured bounding boxes
+#'
+#' @description
+#' Using a custom classification function, classify detections into behavioural
+#' states and visualise these states in the original video via coloured bounding
+#' boxes representing each detection.
+#'
+#' This is a useful tool for validating behavioural state classifications
+#'
+#'
+#' @param detections_path Path to an AnimalTrackR detection file
+#' @param vid_path Path to the video file corresponding to the detections file
+#' @param output_path File path at which to save the output visualisation (MP4 format)
+#' @param classification_function A custom function to classify detections into
+#'    behavioural states for visualisation.
+#'
+#'    The function may have as many inputs as needed, however, one must be
+#'    `detections`, taking an R dataframe corresponding to an AnimalTrackR detection
+#'    file. For testing purposes, the dataframe is read internally using
+#'    `data.table::fread(detections_path)`.
+#'
+#'    The output of the `classification_function` should be a dataframe of the same
+#'    format as the input dataframe but with additional columns. One of these
+#'    should be a categorical column representing the behavioural state. Up to 10
+#'    behavioural states are supported. The name of this categorical column must
+#'    be specified in the `class_column` parameter.
+#'
+#'    Optionally, if the saved detection file has already been classified this
+#'    parameter can be ignored and the the column name can be specified in the
+#'    `class_column` parameter.
+#'
+#'    You must ensure that all dependencies required by the classification function
+#'    are loaded into your R session.
+#'
+#' @param class_column character string. The name of the column in the detections
+#'    dataframe containing the behavioural states (either as an output of the
+#'    `classification_function` or a previously computed column saved in the
+#'    specified csv file)
+#' @param ... Additional paramters to be passed to the `classification_function`
+#'
+#' @return invisibly returns T if the video has been successfully exported
+#' @export
+#'
+#' @examples
+#'
+#'
+
+BehaviourVis <- function(
+    detections_path,
+    vid_path,
+    output_path,
+    classification_function = NULL,
+    class_column,
+    ...
+  ){
+
+  # Read detections
+  dets <- data.table::fread(detections_path)
+
+  # Classify the detections if necessary
+  if(!is.null(classification_function)){
+    dets <- do.call(
+      classification_function,
+      args = c(list(detections = dets), ...)
+    )
+  }
+
+  # Error if class_column doesnt exist
+  if(!(class_column %in% colnames(dets))){
+    stop("`class_column` not found in detections data.
+          Please check the `class_column` parameter and try again.")
+  }
+
+  # Error if class_column has more than 10 categories
+  if(length(unique(dets[class_column])) > 10){
+    stop("More than 10 unique behavioural categories found in `class_column`.")
+  }
+
+  # Error if output path directory does not exist
+  if(!dir.exists(dirname(output_path))){
+    stop("Ouput path directory does not exist.
+          Please use an existing directory for the output video and try again")
+  }
+
+  # Error if video file does not exist
+  if(!file.exists(vid_path)){
+    stop("Video `vid_path` not found.
+          Please check the video path and try again.")
+  }
+
+  # Use the dedicated python function to produce a video with coloured bounding boxes
+  py_BehaviourVis$behaviour_vis(
+    detections = reticulate::r_to_py(dets),
+    video_path = reticulate::r_to_py(vid_path),
+    output_path = reticulate::r_to_py(output_path),
+    class_column = reticulate::r_to_py(class_column)
+  )
+
+  return(invisible(T))
+}
