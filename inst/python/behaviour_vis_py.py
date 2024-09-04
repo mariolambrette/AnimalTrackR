@@ -2,6 +2,7 @@ import os
 import cv2 as cv
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
 
 def behaviour_vis(video_path, detections, output_path, class_column):
     """
@@ -50,11 +51,20 @@ def behaviour_vis(video_path, detections, output_path, class_column):
 
         for index, row in frame_detections.iterrows():
             xl, yt, xr, yb = row['xl'], row['yt'], row['xr'], row['yb']
+            xl_int = math.floor(xl)
+            yt_int = math.floor(yt)
+            xr_int = math.ceil(xr)
+            yb_int = math.ceil(yb)
+            
             category = row[class_column]
             color = color_map.get(category, (0, 255, 255))  # Default color if category not found
+            
+            # Check that coordinates are valid
+            if any(math.isnan(c) for c in [xl, xr, yt, yb]):
+                raise ValueError("NaN found in bounding box coordinates.")
 
             # Draw the bounding box on the frame
-            cv.rectangle(frame, (xl, yt), (xr, yb), color, 2)
+            cv.rectangle(frame, (int(xl), int(yt)), (int(xr), int(yb)), color, 2)
 
         # Write the frame to the output video
         out.write(frame)

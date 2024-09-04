@@ -61,20 +61,21 @@ BehaviourVis <- function(
 
   # Classify the detections if necessary
   if(!is.null(classification_function)){
+    print("classifying detections")
     dets <- do.call(
       classification_function,
       args = c(list(detections = dets), ...)
     )
   }
 
-  # Error if class_column doesnt exist
+  # Error if class_column doesn't exist
   if(!(class_column %in% colnames(dets))){
     stop("`class_column` not found in detections data.
           Please check the `class_column` parameter and try again.")
   }
 
   # Error if class_column has more than 10 categories
-  if(length(unique(dets[class_column])) > 10){
+  if(length(unique(dets[[class_column]])) > 10){
     stop("More than 10 unique behavioural categories found in `class_column`.")
   }
 
