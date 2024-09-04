@@ -42,7 +42,9 @@
 #' @export
 #'
 #' @examples
-#'
+#' \dontrun{
+#'   BehaviourVis()
+#' }
 #'
 
 BehaviourVis <- function(
