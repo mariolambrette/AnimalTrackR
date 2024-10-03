@@ -5,7 +5,7 @@
 #' states and visualise these states in the original video via coloured bounding
 #' boxes representing each detection.
 #'
-#' This is a useful tool for validating behavioural state classifications
+#' This is a useful tool for visualising behavioural state classifications
 #'
 #'
 #' @param detections_path Path to an AnimalTrackR detection file
@@ -71,7 +71,7 @@ BehaviourVis <- function(
   dets <- data.table::fread(detections_path)
 
   # Classify the detections if necessary
-  if(!is.null(classification_function)){
+  if (!is.null(classification_function)) {
     print("classifying detections")
     dets <- do.call(
       classification_function,
@@ -80,24 +80,24 @@ BehaviourVis <- function(
   }
 
   # Error if class_column doesn't exist
-  if(!(class_column %in% colnames(dets))){
+  if (!(class_column %in% colnames(dets))) {
     stop("`class_column` not found in detections data.
           Please check the `class_column` parameter and try again.")
   }
 
   # Error if class_column has more than 10 categories
-  if(length(unique(dets[[class_column]])) > 10){
+  if (length(unique(dets[[class_column]])) > 10) {
     stop("More than 10 unique behavioural categories found in `class_column`.")
   }
 
   # Error if output path directory does not exist
-  if(!dir.exists(dirname(output_path))){
+  if (!dir.exists(dirname(output_path))) {
     stop("Ouput path directory does not exist.
           Please use an existing directory for the output video and try again")
   }
 
   # Error if video file does not exist
-  if(!file.exists(vid_path)){
+  if (!file.exists(vid_path)) {
     stop("Video `vid_path` not found.
           Please check the video path and try again.")
   }
