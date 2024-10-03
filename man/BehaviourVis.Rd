@@ -60,7 +60,18 @@ This is a useful tool for validating behavioural state classifications
 }
 \examples{
 \dontrun{
-  BehaviourVis()
+
+  classifier <- function(detection){
+    # Custom classification function
+    # e.g. assign points to clusters
+  }
+
+  BehaviourVis(
+    detections_path = "path/to/TrackRDetections.csv",
+    vid_path = "path/to/video",
+    output_path = "path/to/save/output/mp4",
+    classification_function = classifier
+  )
 }
 
 }
