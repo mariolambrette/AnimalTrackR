@@ -16,6 +16,12 @@
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
+
+  py_run_model <<- reticulate::import_from_path(
+    "run_model_py",
+    system.file("python", package = pkgname),
+    delay_load = TRUE
+  )
 }
 
 
@@ -23,13 +29,10 @@
 # package environment variables
 trackr_env <- new.env(parent = emptyenv())
 trackr_env$project <- NULL
-trackr_env$python_packages <- c("ultralytics",
-                               # "torchaudio",
-                                "torchvision",
-                                "opencv")
 trackr_env$proj <- NULL
 trackr_env$os <- NULL
 
 # Python bindings
 py_extractImages <- NULL
-py_BehaviourVis <- NULL
+py_BehaviourVis  <- NULL
+py_run_model     <- NULL

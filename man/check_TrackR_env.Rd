@@ -2,21 +2,33 @@
 % Please edit documentation in R/TrackR_env.R
 \name{check_TrackR_env}
 \alias{check_TrackR_env}
-\title{Check the current TrackR environment}
+\title{Check a named conda environment for AnimalTrackR compatibility}
 \usage{
-check_TrackR_env()
+check_TrackR_env(envname = "animaltrackr")
+}
+\arguments{
+\item{envname}{of the conda envionment to check}
 }
 \value{
 TRUE if the environment meets the requirements, or FALSE if not.
 }
 \description{
-Checks the active conda environment meets the requirements to run
-AnimalTrackR.
+Checks a named conda environment ("animaltrackr" by default) to see if meets
+the python dependency requirements of AnimalTrackR. These include python 3.11,
+ultralytics and opencv installations. If your environment does not meet the
+necessary requirements, consider using \code{\link[=create_TrackR_env]{create_TrackR_env()}} to create one
+that does.
+
+To further check an enviornment for GPU compatibility, you can use
+\code{\link[=check_gpu]{check_gpu()}}.
 }
 \examples{
 \dontrun{
-check_TrackR_env()
+create_TrackR_env()
+check_TrackR_env("animaltrackr")
 }
 
-
+}
+\seealso{
+\code{\link[=create_TrackR_env]{create_TrackR_env()}} \code{\link[=check_gpu]{check_gpu()}}
 }

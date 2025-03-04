@@ -21,4 +21,8 @@ of the project they are working on.
 \dontrun{
 set_Project(".../AnimalTrackR-projects/project1")
 }
+
+}
+\seealso{
+\code{\link[=init_Project]{init_Project()}} \code{\link[=get_Project]{get_Project()}}
 }

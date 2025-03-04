@@ -18,6 +18,10 @@
 #' \dontrun{
 #' set_Project(".../AnimalTrackR-projects/project1")
 #' }
+#'
+#' @importFrom tools file_path_as_absolute
+#'
+#' @seealso [init_Project()] [get_Project()]
 
 set_Project <- function(path){ # Takes the path to the project root folder
   trackr_env$proj <- tools::file_path_as_absolute(path)
@@ -40,6 +44,8 @@ set_Project <- function(path){ # Takes the path to the project root folder
 #' \dontrun{
 #' get_Project()
 #' }
+#'
+#' @seealso [init_Project()] [set_Project()]
 
 get_Project <- function(){
   return(trackr_env$proj)
@@ -74,10 +80,12 @@ get_Project <- function(){
 #' @examples
 #' \dontrun{
 #' # Creates a folder in the current working directory called 'AnimalTrackR-projects'
-#' # then creates the Project folder within that unde the 'Project1' root folder
+#' # then creates the Project folder within that under the 'Project1' root folder
 #'
 #' init_project("AnimalTrackR-projects/Project1")
 #' }
+#'
+#' @seealso [set_Project()]
 init_Project <- function(path = "Project"){ # Path to project root directory
 
   # Construct an absolute file path from the users input
@@ -98,17 +106,17 @@ init_Project <- function(path = "Project"){ # Path to project root directory
   )
   dirs <- grep(basename(path), dirs, value = T)
 
-  if(length(dirs) > 0){
+  if (length(dirs) > 0) {
     path <- paste0(
       path,
-      as.character((length(dirs)+1))
+      as.character((length(dirs) + 1))
     )
   }
 
   # Create the project directory and the relevant subdirectories
   dir.create(path)
 
-  if(!dir.exists(path)){
+  if (!dir.exists(path)) {
     stop("Error creating project directory.\n
           Please check file paths and try again")
   }

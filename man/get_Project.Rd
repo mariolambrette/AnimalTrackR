@@ -16,4 +16,8 @@ Allows the user to check the current AnimalTackR project root directory
 \dontrun{
 get_Project()
 }
+
+}
+\seealso{
+\code{\link[=init_Project]{init_Project()}} \code{\link[=set_Project]{set_Project()}}
 }

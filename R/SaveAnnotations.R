@@ -1,7 +1,7 @@
-#' Save annoations into project directory
+#' Save annotations into project directory
 #'
 #' @description
-#' `SaveAnnotations()` takes a csv file of bounding box annotations created with
+#' `save_annotations()` takes a csv file of bounding box annotations created with
 #' [Make Sense](https://www.makesense.ai/) and converts them into YOLO format and
 #' saves the relevant annotation files and images into the project directory.
 #' It should be used after completing each annotating session.
@@ -19,12 +19,13 @@
 #' \dontrun{
 #' # After creating annotations in Make Sense, exporting them to a csv file and
 #' # saving that file to "some/path/annotations.csv":
-#'
-#' SaveAnnotations(csv = "some/path/annotation.csv")
-#' #
+#' save_annotations(csv = "some/path/annotation.csv")
 #' }
+#'
+#' @import dplyr
+#' @import data.table
 
-SaveAnnotations <- function(csv){
+save_annotations <- function(csv){
 
   # Read class index
   class_index <- data.frame(
@@ -33,7 +34,7 @@ SaveAnnotations <- function(csv){
   )
 
   # Read annotation file and normalise coordinates to YOLO format (0-1 scale)
-  annots <- utils::read.csv(csv, header = T) %>%
+  annots <- data.table::fread(csv, header = T) %>%
     dplyr::mutate(
       bbox_x = bbox_x/image_width,
       bbox_y = bbox_y/image_height,
@@ -61,22 +62,22 @@ SaveAnnotations <- function(csv){
         dplyr::filter(image_name == name) %>%
         dplyr::mutate(lines = paste(index, bbox_x, bbox_y, bbox_width, bbox_height, sep = " "))
 
-      if(nrow(annos) > 1){
+      if (nrow(annos) > 1) {
         # Check if more than one target is annotated
-        if(sum(annos$label_name == "Target") > 1){
+        if (sum(annos$label_name == "Target") > 1) {
           message(paste0("Skipping image: ", name, ". Contains more than 1 target annotation."))
           return(invisible(T))
         }
 
         # Check if 'Empty' Empty appears alongside other annotations
-        if("Empty" %in% annos$label_name){
+        if ("Empty" %in% annos$label_name) {
           message(paste0("Skipping image: ", name, ". 'Empty' label is not alone."))
           return(invisible(T))
         }
       }
 
-      # Call the SaveImage function
-      SaveImage(name, set, annos %>% dplyr::select(lines))
+      # Call the .save_image function
+      .save_image(name, set, annos %>% dplyr::select(lines))
     },
     .progress = "text"
   )
@@ -87,7 +88,7 @@ SaveAnnotations <- function(csv){
 
 
 
-#' Convert single image annotations to YOLO format
+#' INTERNAL Convert single image annotations to YOLO format
 #'
 #' @description
 #' Internal function used with `plyr::llply` loop to save individual images in YOLO
@@ -105,13 +106,13 @@ SaveAnnotations <- function(csv){
 #' \dontrun{
 #' plyr::llply(
 #'  as.list(sets$image_name),
-#'  SaveImage,
+#'  .save_image,
 #'  .progress = "text"
 #' )
 #' }
 #'
 
-SaveImage <-
+.save_image <-
   function(name,
            set,
            annos){
