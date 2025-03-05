@@ -3,6 +3,7 @@
 
 ## usethis namespace: start
 #' @import magrittr
+#' @importFrom av av_media_info
 #' @importFrom data.table fread
 #' @importFrom dplyr filter
 #' @importFrom dplyr left_join
@@ -34,11 +35,15 @@
 #' @importFrom reticulate virtualenv_remove
 #' @importFrom scales breaks_pretty
 #' @importFrom tibble rownames_to_column
+#' @importFrom tools file_ext
 #' @importFrom tools file_path_as_absolute
 #' @importFrom tools file_path_sans_ext
 #' @importFrom utils assignInMyNamespace
 #' @importFrom utils menu
 #' @importFrom utils packageName
 #' @importFrom utils read.csv
+#' @importFrom utils write.table
+#' @importFrom yaml as.yaml
+#' @importFrom yaml yaml.load
 ## usethis namespace: end
 NULL

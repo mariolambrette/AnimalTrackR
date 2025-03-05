@@ -99,34 +99,34 @@ extract_Images <-
 
 
     # Check python environment meets requirements
-    if(!check_TrackR_env()){
+    if (!check_TrackR_env()) {
       stop("Conda environment does not meet requirements.\n
             Please activate a suitable conda envirnoment using `set_TrackR_env()`, or create one with `create_TrackR_env()`")
     }
 
-    if(!is.null(group_weights)){
+    if (!is.null(group_weights)) {
 
       # Check names of video and weights lists match
-      if(!identical(sort(names(videos)), sort(names(group_weights)))){
+      if (!identical(sort(names(videos)), sort(names(group_weights)))) {
         stop("Group names in video and weights list do not match.\n
               Please check and try again")
       }
 
       # Check group weights are decimals and sum to 1
-      if(sum(as.numeric(group_weights)) != 1){
+      if (sum(as.numeric(group_weights)) != 1) {
         stop("Group weights must sum to 1")
       }
     } else{
       ## MANUALLY CALCULATE GROUP WEIGHTS BASED ON RELATIVE NUMBER OF VIDEOS ##
     }
 
-    if(!is.numeric(nimgs)){
+    if (!is.numeric(nimgs)) {
       stop("`nimgs` is not numeric")
     }
 
 
 
-    if(!py_extractImages$TestingPython()){
+    if (!py_extractImages$TestingPython()) {
       stop("Error in python environment. \n
            Please check your conda configuration, restart your R session and try again.")
     }

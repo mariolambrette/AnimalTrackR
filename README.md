@@ -77,7 +77,7 @@ extract_Images(
 )
 
 # 5. Annotate images - https://www.makesense.ai/
-SaveAnnotations(csv = "path/to/Annotations.csv")
+save_annotations(csv = "path/to/Annotations.csv")
 
 ### IN DEVELOPMENT ###
 # 6. Run model training and validate performance
@@ -131,14 +131,14 @@ development pipelines. The structure is as follows:
         └── Project2
             └── ...
 
-Most users will never need to interact directly with the majority of
+\*Most users will never need to interact directly with the majority of
 this file structure, it is created and managed by helper functions
-provided in `AnimalTrackR`
+provided in `AnimalTrackR`\*\*
 
 ### First Usage:
 
 `AnimalTrackR` relies on python to execute image processing tasks.
-Specifically, it uses a python 3.9 conda environment. When you first
+Specifically, it uses a python 3.11 conda environment. When you first
 install the package you will need to run the following command to create
 the environment:
 
@@ -162,6 +162,43 @@ session with any subsequent usage of `library(AnimalTrackR)`.
 
 See the [function documentation](man/create_TrackR_condaenv.Rd) for more
 information on custom environments.
+
+#### A note on GPUs
+
+The YOLO models on which AnimalTrackR relies are designed to run on
+[GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). While
+they will still run on a standard computer with a CPU they will be
+significantly faster (10-50x) on a properly configured GPU. Currently
+YOLO models only support CUDA-compatible GPUs. If you have one in your
+system you can configure the `AnimalTrackR` environment to use it by
+adding your specific CUDA version to the call to
+`create_TrackR_condaenv()` as follows:
+
+``` r
+
+library(AnimalTrackR)
+
+# Create a CUDA enabled conda environment for cuda version 12.1
+create_TrackR_condaenv(cuda.version = 12.1)
+
+# Check that the environment was created correctly and that the GPU is accessible
+check_gpu() # This should return TRUE
+```
+
+If you have CUDA but do not know what version you have you can open a
+command prompt and enter
+
+``` bash
+nvidia-smi
+```
+
+The first line of the result will give you your CUDA version.
+
+If you do not have a GPU, or none of this makes sense to you, do not
+worry. The models will still run on a standard laptop, they will just
+take a bit longer. If you need any support with setting up your system,
+or have any other questions regarding these issues please do not
+hesitate to contact us: <ml673@exeter.ac.uk>
 
 ### Starting a project
 
@@ -213,13 +250,28 @@ video_files <- list(
 )
 ```
 
+When setting nested list up consider your experimental design carefully.
+Ideally, your footage is divided into folders rouhgly based on
+experimental groups, and as such separating groups is straightforward
+and should always be done. If your file structure is more complex it may
+be tempting to ignore some of the experimental groupings and samples
+frames from the whole dataset. This is not always an issue but should be
+done with caution. If your footage is **visually consistent** between
+groups (i.e. always the same species, background, obstacles etc.) then
+you probably do not need to worry about stratification. However, if you
+have footage where there are significant visual differences you should
+stratify the input above properly to reflect this variability for
+optimal model performance. You may also need to experiment with
+different stratifications here if you find consistently poor performance
+in a specific experimental group. If you have any issues with step do
+not hesitate to contact us for help at <ml673@exeter.ac.uk>.
+
 `extract_Images()` also takes another list as an argument which defines
 the weights to apply to each group when performing a stratified sample.
 This argument is optional, by default the function will use the relative
 numbers of videos in each group to calculate the weights to apply,
 however there may be instances where users want to change this. This
-argument to do this should be of the same structure as the `video_files`
-list:
+list should be of the same structure as the `video_files` list:
 
 ``` r
 
@@ -354,7 +406,8 @@ This ensures that a representative number of empty frames are added to
 the model training data (the bounding boxes themselves will be deleted
 at a later stage so its location/size are not important). Empty frames
 are important in training as they reduce the instance of false positive
-detections during model deployment.
+detections during model deployment, though if you are certain your
+footage contains no emtpy frames you do not need to worry about this.
 
 ***Annotation guidelines***
 
@@ -432,12 +485,12 @@ library(AnimalTrackR)
 get_Project()
 ```
 
-Next, use the `SaveAnnotations()` function to convert and save your
+Next, use the `save_annotations()` function to convert and save your
 annotations.
 
 ``` r
 
-SaveAnnotations(csv = "path/to/csv/file")
+save_annotations(csv = "path/to/csv/file")
 ```
 
 This will convert the csv file of annotations into the YOLO format and
@@ -448,7 +501,17 @@ that have been annotated from the ‘/ToAnnotate’ directory. This means
 that in your next annotation session you can load the whole folder onto
 Make Sense without a risk of duplicate annotations.
 
+**NOTE:** We are working on building an annotation tool within the
+AnimalTrackR package that will make this process significantly easier,
+if this is something you would like to see please do let us know at
+<ml673@exeter.ac.uk>.
+
 ### Model Training
+
+#### A note on GPUs
+
+Running models on a GPU will save significant computational time, both
+when training and deploying models.
 
 ### Model Deployment
 

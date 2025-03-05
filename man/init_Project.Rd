@@ -31,8 +31,12 @@ To change back to a previous project use \code{\link{set_Project}()}
 \examples{
 \dontrun{
 # Creates a folder in the current working directory called 'AnimalTrackR-projects'
-# then creates the Project folder within that unde the 'Project1' root folder
+# then creates the Project folder within that under the 'Project1' root folder
 
 init_project("AnimalTrackR-projects/Project1")
 }
+
+}
+\seealso{
+\code{\link[=set_Project]{set_Project()}}
 }

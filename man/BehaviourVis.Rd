@@ -46,17 +46,17 @@ dataframe containing the behavioural states (either as an output of the
 \code{classification_function} or a previously computed column saved in the
 specified csv file)}
 
-\item{...}{Additional paramters to be passed to the \code{classification_function}}
+\item{...}{Additional parameters to be passed to the \code{classification_function}}
 }
 \value{
-invisibly returns T if the video has been successfully exported
+Returns the detections data as a dataframe with the class column added
 }
 \description{
 Using a custom classification function, classify detections into behavioural
 states and visualise these states in the original video via coloured bounding
 boxes representing each detection.
 
-This is a useful tool for validating behavioural state classifications
+This is a useful tool for visualising behavioural state classifications
 }
 \examples{
 \dontrun{

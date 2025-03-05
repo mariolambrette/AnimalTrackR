@@ -27,7 +27,7 @@
 
 CountImages <- function(project = get_Project()){
 
-  if(is.null(project)){
+  if (is.null(project)) {
     stop("Project not set. \n
           Use `set-Project()` to activate a TrackR project")
   }
@@ -53,6 +53,7 @@ CountImages <- function(project = get_Project()){
     ggplot2::scale_y_continuous(breaks = scales::breaks_pretty(n = 5)) +
     ggplot2::theme_bw()
 
+  p
 
   return(p)
 

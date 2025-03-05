@@ -36,9 +36,9 @@
 #'    dataframe containing the behavioural states (either as an output of the
 #'    `classification_function` or a previously computed column saved in the
 #'    specified csv file)
-#' @param ... Additional paramters to be passed to the `classification_function`
+#' @param ... Additional parameters to be passed to the `classification_function`
 #'
-#' @return invisibly returns T if the video has been successfully exported
+#' @return Returns the detections data as a dataframe with the class column added
 #' @export
 #'
 #' @examples
@@ -57,6 +57,8 @@
 #'   )
 #' }
 #'
+#' @importFrom data.table fread
+#' @import reticulate
 
 BehaviourVis <- function(
     detections_path,
@@ -110,5 +112,5 @@ BehaviourVis <- function(
     class_column = reticulate::r_to_py(class_column)
   )
 
-  return(invisible(T))
+  return(dets)
 }
