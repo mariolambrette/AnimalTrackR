@@ -29,7 +29,7 @@ for this method will be added in due course.
 
 `AnimalTrackR` has multiple external dependencies, including python
 libraries and FFmpeg. For the vast majority of users the built-in
-`create_TrackR_env()` function will handle all dependencies,
+`create_TrackR_condaenv()` function will handle all dependencies,
 however for users where this is not the case see the DEPENDENCIES
 DOCUMENTATION (vignette with description of all dependencies)
 
@@ -50,7 +50,7 @@ devtools::install_github("mariolambrette/AnimalTrackR")
 library(AnimalTrackR)
 
 # 2. Create a suitable conda environment
-create_TrackR_env()
+create_TrackR_condaenv()
 
 # 3. Initialise a project
 init_Project(path = "path/to/AnimalTrackR-projects/PROJECT-NAME")
@@ -146,7 +146,7 @@ the environment:
 
 library(AnimalTrackR)
 
-create_TrackR_env()
+create_TrackR_condaenv()
 ```
 
 This relies on you having miniconda installed on your machine. If you do
@@ -160,8 +160,45 @@ These steps are only required the first time you use AnimalTrackR. The
 correct environment is now set up and will be made available to your R
 session with any subsequent usage of `library(AnimalTrackR)`.
 
-See the [function documentation](man/create_TrackR_env.Rd) for more
+See the [function documentation](man/create_TrackR_condaenv.Rd) for more
 information on custom environments.
+
+#### A note on GPUs
+
+The YOLO models on which AnimalTrackR relies are designed to run on
+[GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). While
+they will still run on a standard computer with a CPU they will be
+significantly faster (10-50x) on a properly configured GPU. Currently
+YOLO models only support CUDA-compatible GPUs. If you have one in your
+system you can configure the `AnimalTrackR` environment to use it by
+adding your specific CUDA version to the call to
+`create_TrackR_condaenv()` as follows:
+
+``` r
+
+library(AnimalTrackR)
+
+# Create a CUDA enabled conda environment for cuda version 12.1
+create_TrackR_condaenv(cuda.version = 12.1)
+
+# Check that the environment was created correctly and that the GPU is accessible
+check_gpu() # This should return TRUE
+```
+
+If you have CUDA but do not know what version you have you can open a
+command prompt and enter
+
+``` bash
+nvidia-smi
+```
+
+The first line of the result will give you your CUDA version.
+
+If you do not have a GPU, or none of this makes sense to you, do not
+worry. The models will still run on a standard laptop, they will just
+take a bit longer. If you need any support with setting up your system,
+or have any other questions regarding these issues please do not
+hesitate to contact us: <ml673@exeter.ac.uk>
 
 ### Starting a project
 
@@ -470,6 +507,11 @@ if this is something you would like to see please do let us know at
 <ml673@exeter.ac.uk>.
 
 ### Model Training
+
+#### A note on GPUs
+
+Running models on a GPU will save significant computational time, both
+when training and deploying models.
 
 ### Model Deployment
 

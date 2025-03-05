@@ -23,7 +23,7 @@
 #' }
 #'
 #' @import dplyr
-#' @import data.table
+#' @importFrom data.table fread
 
 save_annotations <- function(csv){
 

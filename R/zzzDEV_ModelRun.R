@@ -139,8 +139,6 @@ run_Model <- function(
 }
 
 
-
-
 #' Prepare detections csv file
 #'
 #' @description
@@ -155,6 +153,8 @@ run_Model <- function(
 #' \dontrun{
 #' prepare_csv(detections_path)
 #' }
+#'
+#' @importFrom utils write.table
 
 prepare_csv <- function(path) {
   # Check if the file exists
@@ -201,7 +201,7 @@ prepare_csv <- function(path) {
   columns <- c('Video', 'Frame', 'Timestamp', 'xc', 'yc', 'xl', 'xr', 'yt', 'yb')
 
   # Write column headings to the new or existing CSV file
-  write.table(t(columns), file = path, sep = ",", col.names = FALSE, row.names = FALSE, quote = FALSE, append = TRUE)
+  utils::write.table(t(columns), file = path, sep = ",", col.names = FALSE, row.names = FALSE, quote = FALSE, append = TRUE)
 
   return(path)
 }

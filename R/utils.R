@@ -1,3 +1,9 @@
+# Global varibales for `devtools::check()`
+utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
+                         "bbox_y", "image_height", "bbox_height", "bbox_width",
+                         "image_name", "index", "lines"))
+
+
 #' INTERNAL Check whether a file path points to a video file
 #'
 #' @param path file path to test

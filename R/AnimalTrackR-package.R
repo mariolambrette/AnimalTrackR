@@ -42,6 +42,7 @@
 #' @importFrom utils menu
 #' @importFrom utils packageName
 #' @importFrom utils read.csv
+#' @importFrom utils write.table
 #' @importFrom yaml as.yaml
 #' @importFrom yaml yaml.load
 ## usethis namespace: end
