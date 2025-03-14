@@ -2,7 +2,7 @@
 #'
 #' @description
 #' This is the first stage of the tracking model development workflow.
-#' extract_Images() is used to extract frames from a full video dataset so that
+#' extract_images() is used to extract frames from a full video dataset so that
 #' they can be annotated and used for training and testing YOLO object detection
 #' models.
 #'
@@ -13,7 +13,7 @@
 #'   a treatment and a control, if each group contained 5 individuals and there was
 #'   one monitoring video per individual, the structure of the `videos` object would
 #'   be as follows:
-#'   * videos <- list(Treatment = list(vid1.mp4, vid2.mp4, ..), Control = list(vid6.mp4, ...)).
+#'   `videos <- list(Treatment = list(vid1.mp4, vid2.mp4, ..), Control = list(vid6.mp4, ...))`.
 #'
 #'   In cases where there is chapterised video monitoring a single individual (e.g.
 #'   when the monitoring period is very long), the parent directory of the video chapters
@@ -25,7 +25,7 @@
 #'
 #' @param group_weights Sample size weights to be applied to each experimental group.
 #'
-#'   By default `extract_Images()` will weight each group equally, i.e. if there
+#'   By default `extract_images()` will weight each group equally, i.e. if there
 #'   are two groups 50% of exported images will come from each group. There are
 #'   a number of reasons why this behaviour may not be optimal. For example, if
 #'   the number/length of video sin each group are uneven or a detection model
@@ -68,7 +68,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' extract_Images(
+#' extract_images(
 #'  videos = list(
 #'    Group1 = list(
 #'      "video1.mp4",
@@ -90,7 +90,7 @@
 #' }
 
 
-extract_Images <-
+extract_images <-
   function(videos,
            group_weights = NULL,
            nimgs = 1600, # ~ 1000 training images, 300 testing 300 validation
@@ -116,15 +116,20 @@ extract_Images <-
       if (sum(as.numeric(group_weights)) != 1) {
         stop("Group weights must sum to 1")
       }
-    } else{
-      ## MANUALLY CALCULATE GROUP WEIGHTS BASED ON RELATIVE NUMBER OF VIDEOS ##
+    } else{ # Manually calculate group weights based on number of videos in each group
+
+      # Total number of videos
+      nvids <- sum(sapply(videos, length))
+
+      # Calculate weights
+      group_weights <- lapply(videos, function(x) length(x) / nvids)
+      names(group_weights) <- names(videos)
+
     }
 
     if (!is.numeric(nimgs)) {
       stop("`nimgs` is not numeric")
     }
-
-
 
     if (!py_extractImages$TestingPython()) {
       stop("Error in python environment. \n
@@ -136,30 +141,9 @@ extract_Images <-
       vids = reticulate::r_to_py(videos),
       weights = reticulate::r_to_py(group_weights),
       n = reticulate::r_to_py(as.integer(nimgs)),
-      path = file.path(project, "ToAnnotate"),
+      path = reticulate::r_to_py(file.path(project, "ToAnnotate")),
       vid_ext = reticulate::r_to_py(vid_ext)
     )
 
     invisible(T)
   }
-
-
-
-
-# videos <- list(
-#   Group1 = list(
-#     "video1.mp4",
-#     "video2.mp4",
-#     "video3.mp4"
-#   ),
-#   Group2 = list(
-#     "video4.mp4",
-#     "video5.mp4",
-#     "video6.mp4"
-#   )
-# )
-#
-# group_weights <- list(
-#   Group1 = 0.4,
-#   Group2 = 0.6
-# )

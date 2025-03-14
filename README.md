@@ -4,7 +4,7 @@
 # <img src="man/figures/logo.png" align="left" height="140" alt="AnimalTrackR Logo" style="margin-right: 20px;" /> AnimalTrackR
 
 `AnimalTrackR` provides a simple interface to
-[YOLOv8](https://docs.ultralytics.com/) to allow users to train animal
+[YOLO11](https://docs.ultralytics.com/) to allow users to train animal
 detection models to aid large scale behavioural analyses of single
 animals in confined spaces.
 
@@ -50,13 +50,13 @@ devtools::install_github("mariolambrette/AnimalTrackR")
 library(AnimalTrackR)
 
 # 2. Create a suitable conda environment
-create_TrackR_condaenv()
+create_TrackR_env()
 
 # 3. Initialise a project
 init_Project(path = "path/to/AnimalTrackR-projects/PROJECT-NAME")
 
 # 4. Extract training images from experimental footage
-extract_Images(
+extract_images(
  videos = list(
    Group1 = list(
      "video1.mp4",
@@ -88,7 +88,7 @@ save_annotations(csv = "path/to/Annotations.csv")
 
 ### Overview
 
-`AnimalTrackR` provides an end-to-end pipeline for using [YOLOv8
+`AnimalTrackR` provides an end-to-end pipeline for using [YOLO11
 detection models](https://docs.ultralytics.com/tasks/detect/) to track
 an individual animal in captivity for behavioural analyses. Broadly, it
 allows you to [sample frames](#extracting-training-images) from the
@@ -101,7 +101,7 @@ large video datasets to enable subsequent analyses.
 #### File Structure
 
 `AnimalTrackR` uses a specific file structure to support working on
-multiple projects and allow seamless integration with standard YOLOv8
+multiple projects and allow seamless integration with standard YOLO
 development pipelines. The structure is as follows:
 
     .
@@ -146,7 +146,7 @@ the environment:
 
 library(AnimalTrackR)
 
-create_TrackR_condaenv()
+create_TrackR_env()
 ```
 
 This relies on you having miniconda installed on your machine. If you do
@@ -179,7 +179,7 @@ adding your specific CUDA version to the call to
 library(AnimalTrackR)
 
 # Create a CUDA enabled conda environment for cuda version 12.1
-create_TrackR_condaenv(cuda.version = 12.1)
+create_TrackR_env(cuda.version = 12.1)
 
 # Check that the environment was created correctly and that the GPU is accessible
 check_gpu() # This should return TRUE
@@ -226,7 +226,7 @@ straightforward, but for more complex experiments/datasets with variable
 backgrounds it may be a more complex process.
 
 The basic premise for this step is to create a stratified sample with
-the different experimental groups. `extract_Images()`(described in
+the different experimental groups. `extract_images()`(described in
 detail below) takes a named list as an input. This list’s structure is
 as follows, where each group contains recordings that are related in
 appearance and experimental group:
@@ -266,7 +266,7 @@ different stratifications here if you find consistently poor performance
 in a specific experimental group. If you have any issues with step do
 not hesitate to contact us for help at <ml673@exeter.ac.uk>.
 
-`extract_Images()` also takes another list as an argument which defines
+`extract_images()` also takes another list as an argument which defines
 the weights to apply to each group when performing a stratified sample.
 This argument is optional, by default the function will use the relative
 numbers of videos in each group to calculate the weights to apply,
@@ -282,14 +282,14 @@ group_weights <- list(
 ```
 
 The sum of the weights supplied must be equal to 1 and the names of the
-groups must be the same in these two lists or `extract_Images()` will
+groups must be the same in these two lists or `extract_images()` will
 throw an error.
 
-Run `extract_Images()` as follows:
+Run `extract_images()` as follows:
 
 ``` r
 
-extract_Images(
+extract_images(
   videos = video_files,
   group_weights = group_weights,
   nimgs = 1600
@@ -305,7 +305,7 @@ the backgrounds employed are highly variable. The recommendation is to
 start with the default number and start training detection models, then
 add further images if model performance is poor.
 
-`extract_Images()` will populate the ‘/ToAnnotate’ folder in the project
+`extract_images()` will populate the ‘/ToAnnotate’ folder in the project
 directory with ’\*.jpg’ files extracted from experimental footage.
 
 ### Image annotation
@@ -348,8 +348,8 @@ The three labels are as follows:
   like to track).
 - **ZZZ**: Any non-target objects in the frame that are visually similar
   to the target object (more details below).
-- **Empty**: Use this label on a random bounding box in any frames that
-  do not contain the target animal (more details below).
+- **Empty**: Use this label on a randomly placed bounding box in any
+  frames that do not contain the target animal (more details below).
 
 ***Non-target objects***
 
@@ -429,8 +429,8 @@ There are a few basic principles to follow when annotating your images:
       </div>
 3.  Be consistent with class labels.
     - The target and non-target class labels need to be absolutely
-      consistent across all of your training images (case sensitive). Do
-      not edit the ‘labels.txt’ file.
+      consistent across all of your training images (case sensitive). If
+      you never edit the ‘labels.txt’ file this should not be a problem.
 4.  Label empty frames.
     - Draw a random box on the frame (its location/size is not
       important) and label it ‘empty’. This is to ensure that during
@@ -493,13 +493,14 @@ annotations.
 save_annotations(csv = "path/to/csv/file")
 ```
 
-This will convert the csv file of annotations into the YOLO format and
-save them into the ‘/YOLO’ directory in your project folder. Images will
-be randomly split into training, testing and validation sets with
-standard 60%, 20%, 20% weighting. The function will also remove images
-that have been annotated from the ‘/ToAnnotate’ directory. This means
-that in your next annotation session you can load the whole folder onto
-Make Sense without a risk of duplicate annotations.
+This will convert the csv file of annotations into the [YOLO
+format](https://docs.ultralytics.com/datasets/detect/) and save them
+into the ‘/YOLO’ directory in your project folder. Images will be
+randomly split into training, testing and validation sets with 60%, 20%,
+20% weighting. The function will also remove images that have been
+annotated from the ‘/ToAnnotate’ directory. This means that in your next
+annotation session you can load the folder onto MakeSense as described
+above without a risk of duplicate annotations.
 
 **NOTE:** We are working on building an annotation tool within the
 AnimalTrackR package that will make this process significantly easier,
@@ -508,7 +509,7 @@ if this is something you would like to see please do let us know at
 
 ### Model Training
 
-#### A note on GPUs
+***A note on GPUs***
 
 Running models on a GPU will save significant computational time, both
 when training and deploying models.

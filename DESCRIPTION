@@ -17,6 +17,7 @@ Imports:
     plyr,
     reticulate,
     scales,
+    stringr,
     tibble,
     tools,
     utils,

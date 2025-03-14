@@ -3,7 +3,7 @@
 #' @description
 #' `CountImages()` counts the number of annotated images that have been exported
 #' to the YOLO directory of a TrackR project. The default behaviour will count
-#' images in the current active project, found using `get-Project()`, though the
+#' images in the current active project, found using `get_Project()`, though the
 #' path to any TrackR project can be passed to the `project` argument instead.
 #'
 #' The function returns a bar plot of the number of images in each set  required
@@ -13,7 +13,6 @@
 #' @param project path to a TrackR project directory
 #'
 #' @return a ggplot object showing the number of images in each set in the specified project
-#' @export
 #'
 #' @examples
 #' \dontrun{

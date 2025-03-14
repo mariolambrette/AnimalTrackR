@@ -36,10 +36,10 @@ save_annotations <- function(csv){
   # Read annotation file and normalise coordinates to YOLO format (0-1 scale)
   annots <- data.table::fread(csv, header = T) %>%
     dplyr::mutate(
-      bbox_x = bbox_x/image_width,
-      bbox_y = bbox_y/image_height,
-      bbox_height = bbox_height/image_height,
-      bbox_width = bbox_width/image_width
+      bbox_x = (bbox_x + bbox_width/2) / image_width,
+      bbox_y = (bbox_y + bbox_height/2) / image_height,
+      bbox_height = bbox_height / image_height,
+      bbox_width = bbox_width / image_width
     ) %>%
     dplyr::left_join(class_index, by = "label_name")
 

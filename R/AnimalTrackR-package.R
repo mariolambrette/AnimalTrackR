@@ -34,6 +34,7 @@
 #' @importFrom reticulate virtualenv_exists
 #' @importFrom reticulate virtualenv_remove
 #' @importFrom scales breaks_pretty
+#' @importFrom stringr str_replace_all
 #' @importFrom tibble rownames_to_column
 #' @importFrom tools file_ext
 #' @importFrom tools file_path_as_absolute

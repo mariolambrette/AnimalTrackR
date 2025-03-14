@@ -6,7 +6,7 @@
   ## Function within each module are available via module_name$function_name
 
   py_extractImages <<- reticulate::import_from_path(
-    "extract_Images_py",
+    "extract_images_py",
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
@@ -19,6 +19,12 @@
 
   py_run_model <<- reticulate::import_from_path(
     "run_model_py",
+    system.file("python", package = pkgname),
+    delay_load = TRUE
+  )
+
+  py_train_model <<- reticulate::import_from_path(
+    "train_model_py",
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
@@ -36,3 +42,4 @@ trackr_env$os <- NULL
 py_extractImages <- NULL
 py_BehaviourVis  <- NULL
 py_run_model     <- NULL
+py_train_model   <- NULL

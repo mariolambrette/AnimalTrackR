@@ -1,7 +1,3 @@
-## package level project path variable helper functions
-
-
-
 #' Set TrackR project
 #'
 #' @description
@@ -24,10 +20,23 @@
 #' @seealso [init_Project()] [get_Project()]
 
 set_Project <- function(path){ # Takes the path to the project root folder
-  trackr_env$proj <- tools::file_path_as_absolute(path)
-  invisible(T)
-}
 
+  if (!dir.exists(path)) {
+    stop("The supplied directory does not exist.\n  Please check the filepath or create a suitable directory with `init_Project()`")
+  }
+
+  # Check the supplied path is valid
+  valid <- .check_Project(path)
+
+  # Activate the project or give an error if it invalid
+  if (valid) {
+    trackr_env$proj <- tools::file_path_as_absolute(path)
+    return(invisible(T))
+  } else {
+    stop("The supplied directory does not meet the requirements of a TrackR project directory.\n  Please check the filepath or create a suitable directory with `init_Project()`")
+  }
+
+}
 
 
 # Return the current project (rarely needed by users, more useful internally)
@@ -51,6 +60,70 @@ get_Project <- function(){
   return(trackr_env$proj)
 }
 
+
+#' INTERNAL check the validity of a project directory
+#'
+#' @description
+#' This function checks whether a given directory meets the requirements of a
+#' TrackR project directory. to be used internally when users set project
+#' directories.
+#'
+#' @param project path to a directory to be tested
+#'
+#' @return T/F depending on whether the requirements are met
+#' @noRd
+#'
+
+.check_Project <- function(project = get_Project()) {
+  # Normalize the project path
+  project <- normalizePath(project, mustWork = FALSE)
+
+  # Check if the project directory exists
+  if (!dir.exists(project)) {
+    warning("Project directory does not exist.")
+    return(FALSE)
+  }
+
+  # Define the expected directory structure
+  expected_dirs <- c(
+    "ToAnnotate",
+    file.path("YOLO", "Train"),
+    file.path("YOLO", "Test"),
+    file.path("YOLO", "Val"),
+    file.path("YOLO", "configs"),
+    file.path("YOLO", "models"),
+    file.path("YOLO", "Train", "images"),
+    file.path("YOLO", "Test", "images"),
+    file.path("YOLO", "Val", "images"),
+    file.path("YOLO", "Train", "labels"),
+    file.path("YOLO", "Test", "labels"),
+    file.path("YOLO", "Val", "labels")
+  )
+
+  # Check if all expected directories exist
+  missing_dirs <- character(0)
+  for (dir in expected_dirs) {
+    full_path <- file.path(project, dir)
+    if (!dir.exists(full_path)) {
+      missing_dirs <- c(missing_dirs, dir)
+    }
+  }
+
+  # Check for the labels.txt file in configs
+  labels_file <- file.path(project, "YOLO", "configs", "labels.txt")
+  if (!file.exists(labels_file)) {
+    missing_dirs <- c(missing_dirs, "YOLO/configs/labels.txt")
+  }
+
+  # If any directories are missing, return FALSE with a warning
+  if (length(missing_dirs) > 0) {
+    warning("The following expected directories/files are missing:\n",
+            paste(missing_dirs, collapse = "\n"))
+    return(FALSE)
+  }
+
+  return(TRUE)
+}
 
 
 #' Initiate a new AnimalTrackR project
@@ -86,6 +159,7 @@ get_Project <- function(){
 #' }
 #'
 #' @seealso [set_Project()]
+
 init_Project <- function(path = "Project"){ # Path to project root directory
 
   # Construct an absolute file path from the users input
@@ -135,9 +209,16 @@ init_Project <- function(path = "Project"){ # Path to project root directory
   dir.create(file.path(path, "YOLO", "Test", "labels"))
   dir.create(file.path(path, "YOLO", "Val", "labels"))
 
+  # Copy class index file
   file.copy(
     from = system.file("config", "classes.txt", package = "AnimalTrackR"),
     to = file.path(path, "YOLO", "configs", "labels.txt")
+  )
+
+  # Copy training configuration file
+  file.copy(
+    from = system.file("config", "train_config.yaml", package = "AnimalTrackR"),
+    to = file.path(path, "YOLO", "configs", "train_config.yaml")
   )
 
   cat("\033[31mProject directory initialized.\033[0m\n")
