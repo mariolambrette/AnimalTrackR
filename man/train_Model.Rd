@@ -50,7 +50,7 @@ library(AnimaltrackR)
 set_Project("path/to/TackR_project")
 
 # Train model on annotations
-train_model("model1")
+train_Model("model1")
 
 # Training results will be available in the 'YOLO/model/model1' directory
 }

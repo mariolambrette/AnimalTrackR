@@ -50,8 +50,8 @@ to remove the audio stream. so that it can be processed by the software. The
 reformatted file is stored in a temporary location and the original video
 file you provide is not modified. This reformatting slows the overall
 processing speed. unfortunately this is currently unavoidable, but we are
-monitoring updates this software's underlying computer vision framework
-(\code{opencv}) for a more comprehensive solution.
+monitoring updates in this software's underlying computer vision framework
+(\code{opencv}) for a more friendly solution.
 
 Note that this reformatting requires an additional software library, 'FFMPEG'.
 This is a free video processing library that can be installed \href{https://ffmpeg.org/download.html}{here}
@@ -59,9 +59,7 @@ This is a free video processing library that can be installed \href{https://ffmp
 }
 \examples{
 \dontrun{
- run_model(
-   video = "path/to/video.mp4"
- )
+run_model(video = "path/to/video.mp4")
 }
 
 }

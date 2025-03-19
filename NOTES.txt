@@ -1,6 +1,0 @@
-Vignettes for TrackR
-
-- Image annotation
-- Model training
-- Model running (incl. demo mode)
-- Model evaluation

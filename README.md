@@ -8,8 +8,9 @@
 detection models to aid large scale behavioural analyses of single
 animals in confined spaces.
 
-*The package is still in development and many features are not yet
-available.*
+*The package is still in development so some features may not work
+correctly. Please report any bugs via email (<ml673@exeter.ac.uk>) or by
+submitting an issue*
 
 ## Installation
 
@@ -30,8 +31,8 @@ for this method will be added in due course.
 `AnimalTrackR` has multiple python dependencies. For the vast majority
 of users the built-in `create_TrackR_env()` function will handle all
 dependencies, however for users where this is not the case see the
-DEPENDENCIES DOCUMENTATION (vignette with description of all
-dependencies)
+dependences documentation (run \`vignette(“AnimalTrackR-dependencies”)
+after installing AnimalTrackR)
 
 ## Quick start guide
 
@@ -42,7 +43,7 @@ dependencies)
 5.  Annotate images.
 6.  Run model training and validate performance.
 7.  Deploy models.
-8.  Run downstream behavioural analysis.
+8.  Conduct downstream behavioural analyses.
 
 ``` r
 
@@ -80,9 +81,11 @@ extract_images(
 # 5. Annotate images - https://www.makesense.ai/
 save_annotations(csv = "path/to/Annotations.csv")
 
-### IN DEVELOPMENT ###
 # 6. Run model training and validate performance
+train_Model(model = "example_model")
+
 # 7. Deploy models
+run_model(video = "path/to/video.mp4", model = "example_model")
 ```
 
 ## Intructions
@@ -133,8 +136,8 @@ development pipelines. The structure is as follows:
             └── ...
 
 *Most users will never need to interact directly with the majority of
-this file structure, it is created and managed by helper functions
-provided in `AnimalTrackR`*
+this file structure, it is created and managed by functions provided in
+`AnimalTrackR`*
 
 ### First Usage:
 
@@ -150,31 +153,31 @@ library(AnimalTrackR)
 create_TrackR_env()
 ```
 
-This relies on you having miniconda installed on your machine. If you do
-not have a miniconda installation, you will be prompted to install it.
+This relies on you having Miniconda installed on your machine. If you do
+not have a Miniconda installation, you will be prompted to install it.
 Selecting yes will call `reticulate::install_miniconda()` internally and
-handle the installation process. Users who would prefer to manually
-install miniconda can decline the prompt and proceed to install
-miniconda themselves
+handle the installation process. Users who would prefer to do this
+manually can decline the prompt and proceed to install it themselves
 [here](https://www.anaconda.com/docs/getting-started/miniconda/install).
 
 These steps are only required the first time you use AnimalTrackR. The
 correct environment is now set up and will be made available to your R
 session with any subsequent usage of `library(AnimalTrackR)`.
 
-See the [function documentation](man/create_TrackR_env.Rd) for more
+See the function documentation for `create_TrackR_env()` or the
+dependencies vignette (`vignette("AnimalTrackR-dependencies")`) for more
 information on custom environments.
 
 #### A note on GPUs
 
-The YOLO models on which AnimalTrackR relies are designed to run on
+The YOLO models on which AnimalTrackR relies are optimised to run on
 [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). While
 they will still run on a standard computer with a CPU they will be
-significantly faster (10-50x) on a properly configured GPU. Currently
-YOLO models only support CUDA-compatible GPUs. If you have one in your
-system you can configure the `AnimalTrackR` environment to use it by
-adding your specific CUDA version to the call to `create_TrackR_env()`
-as follows:
+significantly faster (approx. 10-50x) on a properly configured GPU.
+Currently YOLO models only support CUDA-compatible GPUs. If you have one
+in your system you can configure the `AnimalTrackR` environment to use
+it by adding your specific CUDA version to the call to
+`create_TrackR_env()` as follows:
 
 ``` r
 
@@ -225,7 +228,9 @@ footage and experimental design. Training images should accurately
 reflect variability in your experimental data. For some experiments with
 very little variability between recordings this may be very
 straightforward, but for more complex experiments/datasets with variable
-backgrounds it may be a more complex process.
+backgrounds it may be a more complex process. The importance of getting
+this step right increases with the variability and complexitiy of your
+footage so consider your data carefully before proceeding.
 
 The basic premise for this step is to create a stratified sample with
 the different experimental groups. `extract_images()`(described in
@@ -252,9 +257,9 @@ video_files <- list(
 )
 ```
 
-When setting nested list up consider your experimental design carefully.
-Ideally, your footage is divided into folders rouhgly based on
-experimental groups, and as such separating groups is straightforward
+When setting the nested list up consider your experimental design
+carefully. Ideally, your footage is divided into folders roughly based
+on experimental groups, and as such separating groups is straightforward
 and should always be done. If your file structure is more complex it may
 be tempting to ignore some of the experimental groupings and samples
 frames from the whole dataset. This is not always an issue but should be
@@ -264,9 +269,10 @@ you probably do not need to worry about stratification. However, if you
 have footage where there are significant visual differences you should
 stratify the input above properly to reflect this variability for
 optimal model performance. You may also need to experiment with
-different stratifications here if you find consistently poor performance
-in a specific experimental group. If you have any issues with step do
-not hesitate to contact us for help at <ml673@exeter.ac.uk>.
+different stratifications here if you find consistently poor model
+performance in a specific experimental group. If you have any issues
+with step do not hesitate to contact us for help at
+<ml673@exeter.ac.uk>.
 
 `extract_images()` also takes another list as an argument which defines
 the weights to apply to each group when performing a stratified sample.
@@ -309,6 +315,12 @@ add further images if model performance is poor.
 
 `extract_images()` will populate the ‘/ToAnnotate’ folder in the project
 directory with ’\*.jpg’ files extracted from experimental footage.
+
+*Note:* In some cases we have seen very good model performance with
+significantly fewer training images (\<500). Feel free to experiment
+with this as it may save some development time but always proceed with
+caution and ensure you are happy with the model’s accuracy before you
+move to deployment.
 
 ### Image annotation
 
@@ -511,11 +523,163 @@ if this is something you would like to see please do let us know at
 
 ### Model Training
 
-***A note on GPUs***
+Once you have built up a large enough library of training images, you
+can proceed to model training. You should first ensure that the correct
+TrackR project is active.
 
-Running models on a GPU will save significant computational time, both
-when training and deploying models.
+``` r
+
+# Check the active project
+get_Project() # This should return the path to the project for which you would 
+              # like to train a model
+
+# There is no active project, or the wrong project is active, activate the 
+# correct by supplying the correct path to the the below:
+set_Project(path = "path/to/project")
+```
+
+Having verified the correct project is active, you can train a model
+using the `train_Model()` function:
+
+``` r
+
+train_Model("Model-Name")
+```
+
+This will launch YOLO11 model training. You can see more details on
+modifying training parameters in the `train_Model()` function
+documentation. Once training has completed, the training results will be
+saved in the ‘YOLO/models/Model-Name’ directory of the active project.
+You can view the automatically generated plots in that folder to get an
+understanding of the performance of the model. Ideally, you will see
+values very close to 1 for all important metrics (F1, precision, recall
+and mAP). Once this is the case you can proceed to deploying your model.
+
+If model performance is poor you can consider a few options. The first
+is to add to the set of training images. Simply go back to the image
+extraction stage of the development pipeline and repeat the annotation
+stages until you have substantially omre training images and try again.
+Alternatively, if you are sure you have enough training images you can
+tr y modifying the training hyperparameters. See the `train_Model()`
+function documentation for more information on how to do this.
 
 ### Model Deployment
 
+Having trained a successful model it is time to deploy it on your
+experimental footage. Initially you may want to run the model in ‘demo
+mode’ in order to visualise the model’s predictions on short snippets of
+your footage.
+
+``` r
+
+demo_run(
+  video    = "path/to/video.mp4"
+  model    = "Model-Name",
+  savepath = "path/to/save/video_with_detections.mp4"
+  gopro    = FALSE ## IMPORTANT: Set this to TRUE if your footage is recorded on GoPro
+)
+```
+
+This will save a copy of the input video to the location specified with
+the bounding boxes, as predicted by the specified model, super-imposed
+onto it. You can use the footage for demonstration purposes and to
+validate the performance of your model in a continuous video. You may
+also want to use it to check model predictions in clips you know to be
+of particular significance or that have challenging/different visual
+cues than the rest of your footage.
+
+This is not the method you should use to conduct the bulk of your
+analysis as it does not save the bounding box coordinates. For this you
+should use the `run_Model()` function.
+
+``` r
+
+run_Model(
+  video           = "path/to/video.mp4",
+  detections_path = NULL,
+  model           = "Model-Name",
+  save_vid        = F,
+  save_path       = NULL,
+  gopro           = FALSE ## IMPORTANT: Set this to TRUE if your footage is recorded on GoPro
+)
+```
+
+The example above shows the `run_Model()` function with mostly default
+parameters. You must specify filepath to the video to be analysed. The
+example shows an mp4 video but as with image extraction, any format
+supported by `opencv` is suitable and a directory containing chapterised
+video is also acceptable. You can see a full breakdown of the other
+parameters in the function’s documentation (run `?run_Model` in the R
+console). Important things to note are that by default the footage is
+not saved with bounding boxes super-imposed as in many cases this would
+lead to excessive memory usage and that if the footage was recorded on a
+GoPro the `gopro`parameter **must** be set to `TRUE`.
+
+**Bulk detections**
+
+You will likely want to run this function in bulk on a large number of
+videos at one time. In order to do this we reccomend using an R loop as
+there is currently no in-built bulk processing functionality.
+
+``` r
+
+# Load AnimalTrackR
+library(AnimalTrackR)
+
+# Set the correct project
+set_Project("path/to/project")
+
+# List all of the videos you wish to evaluate using the model. The below example
+# would recursively list all mp4 files in the parent directory and return their
+# full file paths but you can use any appropiate method.
+videos <- list.files(
+  "path/to/video_parent_folder", 
+  pattern = "*.mp4"
+  full.names = TRUE, 
+  recursive = TRUE
+)
+
+# Run the model on each of the listed videos
+lapply(
+  videos,
+  run_Model,
+  model = "Model-Name"
+  gopro = FALSE ## IMPORTANT: Set this to TRUE if your footage is recorded on GoPro
+)
+```
+
+For each listed video, the above example will create a detections .csv
+file with the same name as the video and store it in the’ Detections/’
+directory of the active TrackR project. If you wish you can create a
+more complex loop with custom save paths (see the function
+documentation) but this default behaviour should suffice for most users.
+
+**Note:** This stage is where not having a GPU will significantly slow
+processing times. It is difficult to estimate processing times as they
+depend on a large number of factors, but GPU users can expect detections
+to run at ~100fps while a CPU will run at closer to ~10-20fps. It is
+worth bearing the potential processing times in mind before you start a
+bulk run and ensuring that you are happy for the machine to be left
+running for the time it will take.
+
 ### Downstream Analyses
+
+**Congratulations!** You have successful y used AnimalTrackR to watch
+your experimental footage. Firstly, please do get in touch
+(<ml673@exeter.ac.uk>) and let us know how it went and if there is
+anything we can improve. We can’t see who is using AnimaltrackR unless
+you tell us and we’d love to hear about it!
+
+Now, you will now most likely want to conduct some behavioural analysis.
+There is currently no in-built or pre-defined pipeline for behavioural
+analysis using the tracks, so it is up to you to determine how best to
+proceed . Some examples of possible analyses include:
+
+- Assessment of space-use within the frame
+- Hidden Markov Models to classify behavioural states based on movement
+  patterns
+- Interactions with fixed objects in the frame
+
+Do let us know what you decide to do, if there is a demand for pre-built
+analytical solutions we will explore adding them to AnimalTrackR in the
+future.

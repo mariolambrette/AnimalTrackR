@@ -1,9 +1,9 @@
 Package: AnimalTrackR
-Title: YOLO-based tracking of animals in captivity for behavioural analysis
+Title: YOLO-based tracking of animals in video for behavioural analysis
 Version: 0.0.0.9000
 Authors@R: 
     person("Mario", "Lambrette", , "ml673@exeter.ac.uk", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: `AnimalTrackR` provides a simple interface to YOLO11 for use by researchers to track the movement of animals recorded in video footage. It supports the training, development and deployment of detection models for custom datasets. The tracks can be used for high-resolution. long-term behavioural analysis.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -9,9 +9,8 @@
 #' @details
 #' This is a useful function for running detections on example clips to
 #' visualise bounding boxes and visually verify their accuracy. However, it
-#' should not be user's primary method for validating models, for more detail
-#' on how to properly evaluate model performance see the [EVALUATING MODEL PEROFMRANCE]
-#' vignette.
+#' should not be user's primary method for validating models, for this users
+#' should also look at the
 #'
 #' ### Important for GoPro users
 #' **`gopro` details:** Modern GoPro footage is unfortunately incompatible with
@@ -40,7 +39,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' demo_run("path/to/short_clip.mp4)
+#' demo_run("path/to/short_clip.mp4")
 #' }
 #'
 #' @importFrom tools file_ext file_path_sans_ext
@@ -153,8 +152,8 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #' reformatted file is stored in a temporary location and the original video
 #' file you provide is not modified. This reformatting slows the overall
 #' processing speed. unfortunately this is currently unavoidable, but we are
-#' monitoring updates this software's underlying computer vision framework
-#' (`opencv`) for a more comprehensive solution.
+#' monitoring updates in this software's underlying computer vision framework
+#' (`opencv`) for a more friendly solution.
 #'
 #' Note that this reformatting requires an additional software library, 'FFMPEG'.
 #' This is a free video processing library that can be installed [here](https://ffmpeg.org/download.html)
@@ -164,9 +163,7 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #'
 #' @examples
 #' \dontrun{
-#'  run_model(
-#'    video = "path/to/video.mp4"
-#'  )
+#' run_model(video = "path/to/video.mp4")
 #' }
 #'
 #' @importFrom tools file_ext file_path_sans_ext

@@ -42,7 +42,7 @@
 #' set_Project("path/to/TackR_project")
 #'
 #' # Train model on annotations
-#' train_model("model1")
+#' train_Model("model1")
 #'
 #' # Training results will be available in the 'YOLO/model/model1' directory
 #' }
@@ -59,7 +59,7 @@ train_Model <- function(model_name, project = get_Project(), config = NULL) {
   }
 
   # Take the config argument and either create a suitable config file or
-  # load a supllied file depending on its value
+  # load a suplied file depending on its value
   if (is.null(config)) {
     config <- .create_YOLO_config()
   } else {

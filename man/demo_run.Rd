@@ -25,15 +25,14 @@ and visualise the bounding box outputs. This is useful for model validation.
 \details{
 This is a useful function for running detections on example clips to
 visualise bounding boxes and visually verify their accuracy. However, it
-should not be user's primary method for validating models, for more detail
-on how to properly evaluate model performance see the \link{EVALUATING MODEL PEROFMRANCE}
-vignette.
+should not be user's primary method for validating models, for this users
+should also look at the
 \subsection{Important for GoPro users}{
 
 \strong{\code{gopro} details:} Modern GoPro footage is unfortunately incompatible with
 this software (see \href{https://stackoverflow.com/questions/78039408/cv2-ffmpeg-grabframe-packet-read-max-attempts-exceeded-error-after-exactly-rea}{here} for details).
 If you try to run a detection model on GoPro footage you may get this error:
-"\link{ WARN:0@2245.518} global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded".
+\verb{[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded}.
 
 If this happens, set the GoPro parameter to TRUE. This reformats the footage
 to remove the audio stream. so that it can be processed by the software. The
@@ -46,4 +45,10 @@ monitoring updates this software's underlying computer vision framework
 Note that this reformatting requires an additional software library, 'FFMPEG'.
 This is a free video processing library that can be installed \href{https://ffmpeg.org/download.html}{here}
 }
+}
+\examples{
+\dontrun{
+demo_run("path/to/short_clip.mp4")
+}
+
 }

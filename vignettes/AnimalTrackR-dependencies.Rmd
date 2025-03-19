@@ -17,3 +17,33 @@ knitr::opts_chunk$set(
 ```{r setup}
 library(AnimalTrackR)
 ```
+
+AnimalTrackR has several python dependencies as YOLO is a python-based object detection framework. The vast majority of users will not need to interact directly with these dependencies. If you have any doubt, you go to the function documentation for `create_TrackR_env()`. This will install dependencies and handle environment creation correctly for almost all users.
+
+If you have specific requirements based on your system, or other analysis pipelines, you can use this guide to create a custom environment that has the correct python version and packages to run AnimalTrackR. This guide assumes you have a working knowledge of Anaconda/Miniconda and managing python enviornments and packages.
+
+## Environment
+
+AnimalTrackR relies on a conda environment. It will not work with other types of python enviornment (e.g. virtual environments). Therefore, if you wish to create a custom environment you must first install conda. You can install the full release of [Anaconda](https://www.anaconda.com/docs/getting-started/anaconda/install), but we recommend the lightweight installation of [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install). AnimalTrackR uses Miniconda by default.
+
+## Python version
+
+AnimalTrackR has been tested using python 3.11. Many of its dependencies will work with other python versions, but some issus have been reported with dependency conflicts in a number of commputer vision libraries, particularly pytorch, that may become problematic. Users can experiment with other python versions if they need to but we strongly reccomend staying with version 3.11.
+
+## Python packages
+
+AnimalTrackR has two core python package dependencies; ultalytics and opencv.
+
+**ultralytics** is the python API for YOLO. More details are available [here](https://docs.ultralytics.com/)
+**opencv** is a widely used computer vision library that is essential for basic operations performed by AnimaltrackR. See [here](https://pypi.org/project/opencv-python/) for details.
+
+If you are using a CPU only installing the most recent version of these packages should not give you any issues.
+
+## Python packages for GPU support
+
+If you are using an NVIDIA gpu there are some additional dependencies you will need. Where package versions are provided in this list they are **essential** to avoid conflicts:
+
+* pytorch==2.1
+* torchvision
+* pytorch-cuda (version must correspond to cuda version, which can be found by running `nvidia-smi` in a command prompt)
+* numpy<2 (numpy version must be less than 2 to avoid conflicts)

@@ -4,11 +4,11 @@
 \name{AnimalTrackR-package}
 \alias{AnimalTrackR}
 \alias{AnimalTrackR-package}
-\title{AnimalTrackR: YOLO-based tracking of animals in captivity for behavioural analysis}
+\title{AnimalTrackR: YOLO-based tracking of animals in video for behavioural analysis.}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-What the package does (one paragraph).
+`AnimalTrackR` provides a simple interface to YOLO11 for use by researchers to track the movement of animals recorded in video footage. It supports the training, development and deployment of detection models for custom datasets. The tracks can be used for high-resolution. long-term behavioural analysis.
 }
 \author{
 \strong{Maintainer}: Mario Lambrette \email{ml673@exeter.ac.uk}
