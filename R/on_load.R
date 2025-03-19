@@ -6,7 +6,7 @@
   ## Function within each module are available via module_name$function_name
 
   py_extractImages <<- reticulate::import_from_path(
-    "extract_images_py",
+    "extract_Images_py",
     system.file("python", package = pkgname),
     delay_load = TRUE
   )

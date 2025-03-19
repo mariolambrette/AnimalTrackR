@@ -27,11 +27,11 @@ for this method will be added in due course.
 
 ### Dependencies
 
-`AnimalTrackR` has multiple external dependencies, including python
-libraries and FFmpeg. For the vast majority of users the built-in
-`create_TrackR_condaenv()` function will handle all dependencies,
-however for users where this is not the case see the DEPENDENCIES
-DOCUMENTATION (vignette with description of all dependencies)
+`AnimalTrackR` has multiple python dependencies. For the vast majority
+of users the built-in `create_TrackR_env()` function will handle all
+dependencies, however for users where this is not the case see the
+DEPENDENCIES DOCUMENTATION (vignette with description of all
+dependencies)
 
 ## Quick start guide
 
@@ -42,6 +42,7 @@ DOCUMENTATION (vignette with description of all dependencies)
 5.  Annotate images.
 6.  Run model training and validate performance.
 7.  Deploy models.
+8.  Run downstream behavioural analysis.
 
 ``` r
 
