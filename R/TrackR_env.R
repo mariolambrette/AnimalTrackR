@@ -317,13 +317,14 @@ set_TrackR_env <- function(envname = "animaltrackr"){
 #'
 
 check_TrackR_env <- function(envname = "animaltrackr"){
-  # Find the path to the environment python executable
-  envpath <- reticulate::conda_list()$python[reticulate::conda_list()$name == envname]
 
-  # Check if ultralytics and opencv (core depndencies) are installed
-  ul <- system(paste(envpath, "-c \"import ultralytics\""), ignore.stdout = TRUE, ignore.stderr = TRUE) == 0
-  cv <- system(paste(envpath, "-c \"import cv2\""), ignore.stdout = TRUE, ignore.stderr = TRUE) == 0
-  pv <- system(paste(envpath, "-c \"import sys; print(sys.version)\""), intern = TRUE, ignore.stdout = TRUE, ignore.stderr = TRUE) == "3.11"
+  # Check if required Python modules are available
+  ul <- reticulate::py_module_available("ultralytics")
+  cv <- reticulate::py_module_available("cv2")
+
+  # Check Python version
+  py_version <- as.numeric(substr(reticulate::py_config()$version, 1, 4))
+  pv <- py_version == 3.11
 
   return(all(cv, ul, pv))
 }
