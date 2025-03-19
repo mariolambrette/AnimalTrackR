@@ -93,7 +93,7 @@ detection models](https://docs.ultralytics.com/tasks/detect/) to track
 an individual animal in captivity for behavioural analyses. Broadly, it
 allows you to [sample frames](#extracting-training-images) from the
 total of your experiment’s footage which you can
-[annotate](#image-annotation) and use to [train a YOLOv8 detection
+[annotate](#image-annotation) and use to [train a YOLO11 detection
 model](#model-training). You can [run](#model-deployment) the model on
 short example videos for display and validation, or in batch on very
 large video datasets to enable subsequent analyses.
@@ -131,9 +131,9 @@ development pipelines. The structure is as follows:
         └── Project2
             └── ...
 
-\*Most users will never need to interact directly with the majority of
+*Most users will never need to interact directly with the majority of
 this file structure, it is created and managed by helper functions
-provided in `AnimalTrackR`\*\*
+provided in `AnimalTrackR`*
 
 ### First Usage:
 
@@ -150,17 +150,18 @@ create_TrackR_env()
 ```
 
 This relies on you having miniconda installed on your machine. If you do
-not have a miniconda installation, the function will prompt you to
-install it. Selecting yes will call `reticulate::install_miniconda()`
-internally and handle the installation process. Users who would prefer
-to manually install miniconda can decline the prompt and proceed to
-install miniconda themselves.
+not have a miniconda installation, you will be prompted to install it.
+Selecting yes will call `reticulate::install_miniconda()` internally and
+handle the installation process. Users who would prefer to manually
+install miniconda can decline the prompt and proceed to install
+miniconda themselves
+[here](https://www.anaconda.com/docs/getting-started/miniconda/install).
 
 These steps are only required the first time you use AnimalTrackR. The
 correct environment is now set up and will be made available to your R
 session with any subsequent usage of `library(AnimalTrackR)`.
 
-See the [function documentation](man/create_TrackR_condaenv.Rd) for more
+See the [function documentation](man/create_TrackR_env.Rd) for more
 information on custom environments.
 
 #### A note on GPUs
@@ -171,8 +172,8 @@ they will still run on a standard computer with a CPU they will be
 significantly faster (10-50x) on a properly configured GPU. Currently
 YOLO models only support CUDA-compatible GPUs. If you have one in your
 system you can configure the `AnimalTrackR` environment to use it by
-adding your specific CUDA version to the call to
-`create_TrackR_condaenv()` as follows:
+adding your specific CUDA version to the call to `create_TrackR_env()`
+as follows:
 
 ``` r
 
@@ -198,7 +199,7 @@ If you do not have a GPU, or none of this makes sense to you, do not
 worry. The models will still run on a standard laptop, they will just
 take a bit longer. If you need any support with setting up your system,
 or have any other questions regarding these issues please do not
-hesitate to contact us: <ml673@exeter.ac.uk>
+hesitate to contact <ml673@exeter.ac.uk>
 
 ### Starting a project
 

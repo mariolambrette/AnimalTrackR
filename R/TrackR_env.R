@@ -268,14 +268,12 @@ set_TrackR_env <- function(envname = "animaltrackr"){
   # Check the specified environment exists
   if (reticulate::condaenv_exists(envname)) {
 
+    # Use the specified environment
+    reticulate::use_condaenv(envname)
+
     # Check the environment and if it meets the requirements activate it
-    if (check_TrackR_env(envname)) {
-      # Use the specified environment
-      reticulate::use_condaenv(envname)
-    } else {
-      stop("The specified conda environment does not meet the neccesary requirements.\n
-            Please use a different conda environment, or create a suitable environment \n
-            using `create_TrackR_env()`")
+    if (!check_TrackR_env(envname)) {
+      stop("The specified conda environment does not meet the neccesary requirements.\nPlease use a different conda environment, or create a suitable environment \nusing `create_TrackR_env()`")
     }
 
   } else {
