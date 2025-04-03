@@ -103,7 +103,7 @@ def extract(vids, weights, n, path, vid_ext):
                     if f_ext.lower() not in exts:
                         raise ValueError("Video format incompatible. Check file path and adjust `vid_ext` if necessary")
                 else:
-                    raise ValueError("Video path format incompatible. Please check file paths and try again")
+                    raise FileNotFoundError(f"{vid} not found or is a directory. Please check filepath and try again.\nVideo paths must be the path to a specific video file, or the path to a directory that contains ONLY video files.")
 
                 # Capture video
                 cap = cv.VideoCapture(vid)
