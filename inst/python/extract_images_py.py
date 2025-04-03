@@ -51,7 +51,7 @@ def extract(vids, weights, n, path, vid_ext):
                     if os.path.isfile(os.path.join(vid, f)):
                         f_ext = os.path.splitext(f)[1]
                         if f_ext.lower() in exts:
-                            files.append(f)
+                            files.append(os.path.join(vid, f))
 
                 # Get the number of frames in each chapter
                 frames = []
