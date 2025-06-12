@@ -8,4 +8,4 @@ hsv_h: 0
 hsv_s: 0
 hsv_v: 0
 degrees: 0
-classes: 0, 1, 2
+classes: [0,1]

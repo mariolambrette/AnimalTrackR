@@ -51,7 +51,8 @@
 #' @importFrom tools file_ext
 #'
 
-train_Model <- function(model_name, project = get_Project(), config = NULL) {
+train_Model <- function(model_name, project = get_Project(), config = NULL,
+                        target_only = FALSE) {
 
   # Check that there is an active project
   if (is.null(project)) {
@@ -124,7 +125,8 @@ train_Model <- function(model_name, project = get_Project(), config = NULL) {
     project_dir = reticulate::r_to_py(project),
     model_name  = reticulate::r_to_py(model_name),
     gpu         = reticulate::r_to_py(gpu_available),
-    param_file  = reticulate::r_to_py(param_file)
+    param_file  = reticulate::r_to_py(param_file),
+    t_only      = reticulate::r_to_py(target_only)
   )
 
   return(invisible(T))

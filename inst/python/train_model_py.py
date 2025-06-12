@@ -1,7 +1,8 @@
 import ultralytics
-import os 
+import os
+import yaml
 
-def train_model(config_file, project_dir, model_name, gpu, param_file):
+def train_model(config_file, project_dir, model_name, gpu, param_file, t_only):
   
   """
   Python function to train YOLO11s detection model based on a TrackR project 
@@ -21,6 +22,17 @@ def train_model(config_file, project_dir, model_name, gpu, param_file):
   models_dir = os.path.join(project_dir, "YOLO", "models")
   model = ultralytics.YOLO(os.path.join(models_dir, "yolo11s.pt"))
   
+  if t_only:
+        # Read the existing YAML file
+        with open(param_file, 'r') as file:
+            config = yaml.safe_load(file)
+        
+        # Modify the classes parameter
+        config['classes'] = [0]
+        
+        # Save the modified YAML file
+        with open(param_file, 'w') as file:
+            yaml.safe_dump(config, file, default_flow_style=False)
   
   
   if gpu:
@@ -43,5 +55,17 @@ def train_model(config_file, project_dir, model_name, gpu, param_file):
       device="cpu",
       cfg=param_file
     )
+  
+  if t_only:
+      # Read the existing YAML file
+      with open(param_file, 'r') as file:
+          config = yaml.safe_load(file)
+      
+      # Modify the classes parameter
+      config['classes'] = [0,1]
+      
+      # Save the modified YAML file
+      with open(param_file, 'w') as file:
+          yaml.safe_dump(config, file, default_flow_style=False)
   
   os.chdir(wd)
