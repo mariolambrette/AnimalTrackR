@@ -4,7 +4,12 @@
 \alias{train_Model}
 \title{Train a YOLOv11s model with data held in a TrackR project directory}
 \usage{
-train_Model(model_name, project = get_Project(), config = NULL)
+train_Model(
+  model_name,
+  project = get_Project(),
+  config = NULL,
+  target_only = FALSE
+)
 }
 \arguments{
 \item{model_name}{Character string indicating the name of the model to train
@@ -16,6 +21,13 @@ supplied by \code{get_Project()}, most users will never need to change this.}
 \item{config}{\code{NULL} or the path to a YOLO dataset configuration yaml file.
 The default (\code{NULL}) automatically creates a configuration file using the
 TrackR project architecture. Most users will never need to change this.}
+
+\item{target_only}{Boolean indicating whether non target annotated objects
+should be included in model training. This refers to the 'ZZZ' class which
+contains non-target but visually similar objects. There may be cases where
+including these in modeltraining actually hampers performance (e.g. where
+there are not very many of these objects). This parameters allows those
+annotations to be excluded from model training.}
 }
 \value{
 invisibly returns TRUE when training is complete. The model training

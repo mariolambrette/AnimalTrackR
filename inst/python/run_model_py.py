@@ -85,9 +85,11 @@ def run_model(vid, weights, detections):
     
 # Function for running model in demo mode
 def demo_run(weights, video, project, name):
+
     # Load model
     model = YOLO(weights)
 
     # run model
     model.predict(video, save=True, conf=0.7, classes=[0], save_txt=False, 
-                  save_conf=True, project=project, name=name, max_det=1)
+                  save_conf=True, project=project, name=name, max_det=1, 
+                  stream=True)

@@ -18,20 +18,13 @@ utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
 #'
 #' @importFrom av av_media_info
 
-.is_video <- function(path){
-
+.is_video <- function(path) {
   tryCatch({
-    # Try to get file info
     info <- av::av_media_info(path)
-
-    # Check if the video has frames
-    if (is.na(info$video["frames"])) {
-      return(FALSE)
-    } else {
-      return(TRUE)
-    }
+    has_video <- !is.null(info$video) && length(info$video) > 0
+    has_duration <- !is.null(info$duration) && info$duration > 0
+    return(has_video && has_duration)
   }, error = function(e) {
-    # return FALSE is an error occurs (the file is not a video)
     return(FALSE)
   })
 }

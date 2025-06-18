@@ -4,7 +4,7 @@
 \name{AnimalTrackR-package}
 \alias{AnimalTrackR}
 \alias{AnimalTrackR-package}
-\title{AnimalTrackR: YOLO-based tracking of animals in video for behavioural analysis.}
+\title{AnimalTrackR: YOLO-based tracking of animals in video for behavioural analysis}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 

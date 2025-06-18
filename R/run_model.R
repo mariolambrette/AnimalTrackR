@@ -51,8 +51,12 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
     stop("No active TrackR project found.\n  Set an active project with `set_Project()` then try again.")
   }
 
+  if (!file.exists(video)) {
+    stop("`video` path not found. \n  Check the specified video path is correct and try again.")
+  }
+
   if (!.is_video(video)) {
-    stop("Invalid `video` argument.\n  Check that specified video path is correct and try again.")
+    stop("Invalid `video` argument.\n  Check the specified video path is a supported video format and try again.")
   }
 
   ## Get model weights path ----
@@ -112,6 +116,7 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
   if (gopro) {
     video <- .reformat_gopro(vid = video)
   }
+
 
   py_run_model$demo_run(
     weights = reticulate::r_to_py(weights),
