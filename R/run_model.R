@@ -96,10 +96,15 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
   }
 
   ## Handle save path ----
-
   if (is.null(savepath)) { # Construct default save path if none provided
     project = file.path(get_Project(), "Demos")
     name = tools::file_path_sans_ext(basename(video))
+
+    if (!dir.exists(project)) {
+      cat(paste0("Creating directory: '", project, "' to save video detections"))
+      dir.create(project)
+    }
+
   } else if (tools::file_ext(savepath) != "") {
     stop("Invalid `savepath` argument.\n  `savepath` must be a valid file path to a directory into which the output video will be saved.")
   } else {

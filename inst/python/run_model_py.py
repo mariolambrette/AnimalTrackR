@@ -88,8 +88,84 @@ def demo_run(weights, video, project, name):
 
     # Load model
     model = YOLO(weights)
+    
+    # Capture video
+    cap = cv.VideoCapture(video)
+    
+    # Check the capture was successful
+    if not cap.isOpened():
+      raise FileNotFoundError(f"Cannot open video: {vid}")
+    
+    # Get video properties
+    fps = int(cap.get(cv.CAP_PROP_FPS))
+    width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+    
+    # Define video output path
+    output_vid = name + ".avi"
+    output_path = os.path.join(project, output_vid)
+    
+    # Define codec and create VideoWriter
+    fourcc = cv.VideoWriter_fourcc(*'XVID')
+    out = cv.VideoWriter(output_path, fourcc, fps, (width, height))
+    
+    # Check if VideoWriter opened successfully
+    if not out.isOpened():
+        print("Error: Could not open VideoWriter")
+        cap.release()
+        exit()
+    
+    frame_count = 0
+    
+    while True:
+        # Read the frame
+        ret, frame = cap.read()
+        
+        if not ret:
+            break
+        
+        # Process frame by running inference
+        res = model.predict(frame, save=False, conf=0.75, classes=[0], save_txt=False, stream=True, max_det=1)
+        
+        # Extract box coordinates
+        coords = None
+        for r in res:
+            box = r.boxes
+            if box is not None:
+                coords = box.xywh
+        
+        # Skip saving if there is no detection
+        if coords is None or coords.shape[0] == 0:
+            # Write original frame without annotations
+            out.write(frame)
+            frame_count += 1
+            continue
+        
+        # Get frame info (optional - for logging)
+        current_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
+        timestamp = cap.get(cv.CAP_PROP_POS_MSEC)
+        
+        # Get coordinate values
+        xc = coords[0, 0].item()
+        yc = coords[0, 1].item()
+        hw = (coords[0, 2].item()) / 2
+        hh = (coords[0, 3].item()) / 2
+        xl = int(xc - hw)
+        xr = int(xc + hw)
+        yt = int(yc - hh)
+        yb = int(yc + hh)
+        
+        # Draw bounding box on frame
+        cv.rectangle(frame, (xl, yt), (xr, yb), (247, 232, 22), 2)
+        
+        # Write annotated frame to output video
+        out.write(frame)
+        
+        frame_count += 1
+        if frame_count % 30 == 0:  # Print progress every 30 frames
+            print(f"Processed {frame_count} frames")
 
-    # run model
-    model.predict(video, save=True, conf=0.7, classes=[0], save_txt=False, 
-                  save_conf=True, project=project, name=name, max_det=1, 
-                  stream=True)
+    # Release everything
+    cap.release()
+    out.release()
+    cv.destroyAllWindows()
