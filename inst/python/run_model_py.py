@@ -9,7 +9,7 @@ def check_cuda():
   return cuda.is_available()
 
 # Function for running model on single video
-def run_model(vid, weights, detections):
+def run_model(vid, weights, detections, detect_fps=None):
     
     """
     Runs YOLO detection model on video data and records detection in AnimalTrackR format csv file.
@@ -30,11 +30,30 @@ def run_model(vid, weights, detections):
     if not cap.isOpened():
       raise FileNotFoundError(f"Cannot open video: {vid}")
     
+    # Get video fps
+    video_fps = cap.get(cv.CAP_PROP_FPS)
+    
+    # Calculate frame skip interval
+    if detect_fps is None:
+      frame_skip = 1  # Process every frame
+    else:
+      if detect_fps > video_fps:
+        print(f"Warning: Detection FPS ({detect_fps}) is higher than video FPS ({video_fps}). Processing every frame.")
+        frame_skip = 1
+      else:
+        frame_skip = int(video_fps / detect_fps)
+    
     # Empty list of rows to store detections
     rows = []
     
+    # frame counter
+    frame_count = 0
+    
     # Iterate over each frame, running inference
     while True:
+      
+      # Iterate frame number
+      frame_count += 1
       
       # Read the frame
       ret, frame = cap.read()
@@ -42,33 +61,37 @@ def run_model(vid, weights, detections):
       if not ret:
         break
       
-      # Process frame by running inference and updating csv file
-      res = model.predict(frame, save=False, conf=0.75, classes=[0], save_txt=False, stream=True, max_det=1)
+      if frame_count % frame_skip == 0:
+        # Process frame by running inference and updating csv file
+        res = model.predict(frame, save=False, conf=0.75, classes=[0], save_txt=False, stream=True, max_det=1)
+        
+        # Extract box coordinates
+        for r in res:
+          box = r.boxes
+        coords = box.xywh
+    
+        # Skip saving if there is no detection
+        if coords.shape[0] == 0:
+          continue
+        
+        current_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
+        timestamp = cap.get(cv.CAP_PROP_POS_MSEC)
+        
+        # Get coordinate values
+        xc = coords[0, 0].item()
+        yc = coords[0, 1].item()
+        hw = (coords[0, 2].item()) / 2
+        hh = (coords[0, 3].item()) / 2
+        xl = xc - hw
+        xr = xc + hw
+        yt = yc - hh
+        yb = yc + hh
+        
+        # Append coordinates to the table
+        row = [vid, current_frame, timestamp, xc, yc, xl, xr, yt, yb]
+        rows.append(row)
       
-      # Extract box coordinates
-      for r in res:
-        box = r.boxes
-      coords = box.xywh
-  
-      # Skip saving if there is no detection
-      if coords.shape[0] == 0:
-        continue
-      
-      frame = cap.get(cv.CAP_PROP_POS_FRAMES)
-      timestamp = cap.get(cv.CAP_PROP_POS_MSEC)
-      
-      # Get coordinate values
-      xc = coords[0, 0].item()
-      yc = coords[0, 1].item()
-      hw = (coords[0, 2].item()) / 2
-      hh = (coords[0, 3].item()) / 2
-      xl = xc - hw
-      xr = xc + hw
-      yt = yc - hh
-      yb = yc + hh
-      
-      row = [vid, frame, timestamp, xc, yc, xl, xr, yt, yb]
-      rows.append(row)
+
       
     # Release video capture
     cap.release()

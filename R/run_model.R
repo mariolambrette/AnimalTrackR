@@ -138,6 +138,7 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #' Run AnimalTrackR detection model
 #'
 #' @param video Path to the video on which to run inference. This can either be a path to a single video file or a path to a directory containing chapterised video.
+#' @param detect_fps An integer value that determines the frame rate at which to run model detections. Video is often recorded at very high frame rates (e.g. 50+ fps). This can cause processing times to be very slow. In most cases, detections at that resolution will not provide any additional behavioural data over much lower frame rates (e.g. 5fps). Users should consider their needs carefully and balance computing time with the resolution at which detections are required to identify behaviours of interest.
 #' @param detections_path File path at which to save the detections. This is an optional parameter. By default the detections will be saved at "{project_path}/Detections/VideoName.csv".
 #' @param model The detection model to use for detections. If you have only trained one model in this project you can leave the default behaviour, which uses the first model that appears in the "YOLO/models" directory in the project folder. Otherwise, the name of the desired model folder should be provided. See details for more information.
 #' @param save_vid Boolean. Defaults to `FALSE`, if set to `TRUE` a copy of the video is saved with predicted bounding boxes plotted onto it. This is useful for validation purposes though for long videos can significantly increase processing times. We recommend using [`demo_run()`] for this type of validation.
@@ -181,8 +182,10 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #' @import reticulate
 #' @import magrittr
 
+
 run_Model <- function(
     video,
+    detect_fps = NULL,
     detections_path = NULL,
     model = NULL,
     save_vid = F,
@@ -327,12 +330,14 @@ run_Model <- function(
         py_run_model$run_model(
           vid        = reticulate::r_to_py(v),
           weights    = reticulate::r_to_py(weights),
-          detections = reticulate::r_to_py(detections_path)
+          detections = reticulate::r_to_py(detections_path),
+          detect_fps = reticulate::r_to_py(detect_fps)
         )
       }
     )
   )
 }
+
 
 
 #' INTERNAL Prepare detections csv file
