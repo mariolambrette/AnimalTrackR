@@ -16,7 +16,7 @@
 #' **`gopro` details:** Modern GoPro footage is unfortunately incompatible with
 #' this software (see [here](https://stackoverflow.com/questions/78039408/cv2-ffmpeg-grabframe-packet-read-max-attempts-exceeded-error-after-exactly-rea) for details).
 #' If you try to run a detection model on GoPro footage you may get this error:
-#' `[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded`.
+#' \verb{[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded}.
 #'
 #' If this happens, set the GoPro parameter to TRUE. This reformats the footage
 #' to remove the audio stream. so that it can be processed by the software. The
@@ -139,7 +139,7 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #'
 #' @param video Path to the video on which to run inference. This can either be a path to a single video file or a path to a directory containing chapterised video.
 #' @param detect_fps An integer value that determines the frame rate at which to run model detections. Video is often recorded at very high frame rates (e.g. 50+ fps). This can cause processing times to be very slow. In most cases, detections at that resolution will not provide any additional behavioural data over much lower frame rates (e.g. 5fps). Users should consider their needs carefully and balance computing time with the resolution at which detections are required to identify behaviours of interest.
-#' @param detections_path File path at which to save the detections. This is an optional parameter. By default the detections will be saved at "{project_path}/Detections/VideoName.csv".
+#' @param detections_path File path at which to save the detections. This is an optional parameter. By default the detections will be saved at "\{project_path\}/Detections/VideoName.csv".
 #' @param model The detection model to use for detections. If you have only trained one model in this project you can leave the default behaviour, which uses the first model that appears in the "YOLO/models" directory in the project folder. Otherwise, the name of the desired model folder should be provided. See details for more information.
 #' @param save_vid Boolean. Defaults to `FALSE`, if set to `TRUE` a copy of the video is saved with predicted bounding boxes plotted onto it. This is useful for validation purposes though for long videos can significantly increase processing times. We recommend using [`demo_run()`] for this type of validation.
 #' @param save_path The path at which to save the video with overlaid detections. Only used if `save_vid` is `TRUE`.
@@ -156,7 +156,7 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #' **`gopro` details:** Modern GoPro footage is unfortunately incompatible with
 #' this software (see [here](https://stackoverflow.com/questions/78039408/cv2-ffmpeg-grabframe-packet-read-max-attempts-exceeded-error-after-exactly-rea) for details).
 #' If you try to run a detection model on GoPro footage you may get this error:
-#' "[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded".
+#' \verb{[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded}.
 #'
 #' If this happens, set the GoPro parameter to TRUE. This reformats the footage
 #' to remove the audio stream. so that it can be processed by the software. The

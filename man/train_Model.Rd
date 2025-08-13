@@ -25,13 +25,13 @@ TrackR project architecture. Most users will never need to change this.}
 \item{target_only}{Boolean indicating whether non target annotated objects
 should be included in model training. This refers to the 'ZZZ' class which
 contains non-target but visually similar objects. There may be cases where
-including these in modeltraining actually hampers performance (e.g. where
+including these in model training actually hampers performance (e.g. where
 there are not very many of these objects). This parameters allows those
 annotations to be excluded from model training.}
 }
 \value{
 invisibly returns TRUE when training is complete. The model training
-results will be available to view at 'YOLO/model/{model_name}'
+results will be available to view at 'YOLO/model/\{model_name\}'
 }
 \description{
 This function takes the annotated data in a TrackR project directory and uses
@@ -55,7 +55,7 @@ results but may be essential in some cases. For a full description of
 possible hyperparameters see the \href{https://docs.ultralytics.com/modes/train/#train-settings}{ultralytics documentation}
 }
 \examples{
-/dontrun{
+\dontrun{
 
 # After images have been annotated, set the active project
 library(AnimaltrackR)
