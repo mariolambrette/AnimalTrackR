@@ -6,6 +6,7 @@
 \usage{
 run_Model(
   video,
+  detect_fps = NULL,
   detections_path = NULL,
   model = NULL,
   save_vid = F,
@@ -16,7 +17,9 @@ run_Model(
 \arguments{
 \item{video}{Path to the video on which to run inference. This can either be a path to a single video file or a path to a directory containing chapterised video.}
 
-\item{detections_path}{File path at which to save the detections. This is an optional parameter. By default the detections will be saved at "{project_path}/Detections/VideoName.csv".}
+\item{detect_fps}{An integer value that determines the frame rate at which to run model detections. Video is often recorded at very high frame rates (e.g. 50+ fps). This can cause processing times to be very slow. In most cases, detections at that resolution will not provide any additional behavioural data over much lower frame rates (e.g. 5fps). Users should consider their needs carefully and balance computing time with the resolution at which detections are required to identify behaviours of interest. The default, \code{NULL}, will run model detections on every frame.}
+
+\item{detections_path}{File path at which to save the detections. This is an optional parameter. By default the detections will be saved at "\{project_path\}/Detections/VideoName.csv".}
 
 \item{model}{The detection model to use for detections. If you have only trained one model in this project you can leave the default behaviour, which uses the first model that appears in the "YOLO/models" directory in the project folder. Otherwise, the name of the desired model folder should be provided. See details for more information.}
 
@@ -33,17 +36,16 @@ Returns the filepath to the detections file
 Run AnimalTrackR detection model
 }
 \details{
-\strong{\code{model} details:} In principle, any YOLOv8-v11 model weights can be used here.
+\strong{\code{model} details:} In principle, any YOLOv8-v11 model weights can be used.
 For most users, providing the model name specified in \code{\link[=train_Model]{train_Model()}} will
 be the right thing to do here. However, users wishing to experiment with
-other model weights can do so by providing the full path to those weights
-here.
+other model weights can do so by providing the full path to those weights.
 \subsection{Important for GoPro users}{
 
-\strong{\code{gopro} details:} Modern GoPro footage is unfortunately incompatible with
+\strong{\code{GoPro} details:} GoPro footage is unfortunately incompatible with
 this software (see \href{https://stackoverflow.com/questions/78039408/cv2-ffmpeg-grabframe-packet-read-max-attempts-exceeded-error-after-exactly-rea}{here} for details).
 If you try to run a detection model on GoPro footage you may get this error:
-"\link{ WARN:0@2245.518} global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded".
+\verb{[ WARN:0@2245.518] global cap_ffmpeg_impl.hpp:1595 grabFrame packet read max attempts exceeded}.
 
 If this happens, set the GoPro parameter to TRUE. This reformats the footage
 to remove the audio stream. so that it can be processed by the software. The

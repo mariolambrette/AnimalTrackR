@@ -12,16 +12,16 @@ Imports:
     av,
     data.table,
     dplyr,
-    ggplot2,
     magrittr,
     plyr,
     reticulate,
-    scales,
     stringr,
-    tibble,
     tools,
     utils,
-    yaml
+    yaml,
+    moveHMM,
+    tidyr,
+    stats
 Suggests: 
     knitr,
     rmarkdown,
