@@ -49,7 +49,7 @@
 #'     # e.g. assign points to clusters
 #'   }
 #'
-#'   BehaviourVis(
+#'   behaviour_viz(
 #'     detections_path = "path/to/TrackRDetections.csv",
 #'     vid_path = "path/to/video",
 #'     output_path = "path/to/save/output/mp4",
@@ -60,7 +60,7 @@
 #' @importFrom data.table fread
 #' @import reticulate
 
-BehaviourVis <- function(
+behaviour_viz <- function(
     detections_path,
     vid_path,
     output_path,
