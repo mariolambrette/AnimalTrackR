@@ -44,7 +44,8 @@ are loaded into your R session.}
 \item{class_column}{character string. The name of the column in the detections
 dataframe containing the behavioural states (either as an output of the
 \code{classification_function} or a previously computed column saved in the
-specified csv file)}
+specified csv file). The default - "State" is the column computed by the
+provided function \code{fit_HMM()}.}
 
 \item{...}{Additional parameters to be passed to the \code{classification_function}}
 }

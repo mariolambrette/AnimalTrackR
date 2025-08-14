@@ -100,7 +100,10 @@ total of your experiment’s footage which you can
 [annotate](#image-annotation) and use to [train a YOLO11 detection
 model](#model-training). You can [run](#model-deployment) the model on
 short example videos for display and validation, or in batch on very
-large video datasets to enable subsequent analyses.
+large video datasets to enable subsequent analyses. Model detections can
+be used to run various behavioural analyses. Functionality for fitting
+hidden markov models (HMMs) to detections to classify behaviour into
+active and non active states is included and described [here]().
 
 #### File Structure
 
@@ -662,24 +665,70 @@ worth bearing the potential processing times in mind before you start a
 bulk run and ensuring that you are happy for the machine to be left
 running for the time it will take.
 
-### Downstream Analyses
+### Hidden Markov Models for Behavioural States
 
-**Congratulations!** You have successful y used AnimalTrackR to watch
+A common way to assess animal behaviour is to define the time spent in
+active and non-active behavioural states. This analysis is supported by
+AnimalTrackR. The `fit_HMM()` function is provided to fit hidden markov
+models to animal detections to classify active and non-active behaviour:
+
+``` r
+
+####################################################
+#                                                  #
+# Train and deploy AnimalTrackR models (see above) #
+#                                                  #
+####################################################
+
+# Ensure the correct AnimalTrackR project is active and set the 
+# working directory
+set_Project("path/to/project")
+setwd(get_Project())
+
+# List all detection files in the project
+detection_files <- list.files("Detections")
+
+# Iterate HMM fitting over each detection file
+for (detections in detection_files) {
+  fit_HMM(
+    detections,
+    state_fps = 3, # Resolution at which behaviour should be classified
+    overwrite = F  # Skip files for which behavioural state classifications already exist
+  )
+}
+```
+
+The above snippet will classify behavioural states in all detection
+files in an AnimalTrackR project. the `state_fps` parameter defines the
+resolution of behavioural state classification. Setting it to 3 (the
+default) will categorise behaviour at 3 frames per second, which should
+be sufficient to identify the behaviour of most individuals while
+reducing processing times. If processing times are very long, users can
+experiment with lower resolutions. The `overwrite` parameter determines
+how the function handles detection files where behaviour has already
+been classified. If the specified detection file has a ‘State’ column
+and `overwrite` is set to `FALSE`, those files will be skipped. If
+`TRUE`, the ‘State’ column will be overwritten.
+
+Behaviour is classified into either ‘State 1’ (inactive) or ‘State 2’
+(active). Classifications can be visualised using the `behaviour_viz()`
+function as follows:
+
+``` r
+
+behaviour_viz(
+  detections_path = "Detections/Video1.csv",
+  vid_path = "path/to/videos/Video1.mp4",
+  output_path = "path/to/Video1_behaviour.mp4"
+)
+                            
+```
+
+### Thank you
+
+**Congratulations!** You have successfully used AnimalTrackR to watch
 your experimental footage. Firstly, please do get in touch
 (<ml673@exeter.ac.uk>) and let us know how it went and if there is
-anything we can improve. We can’t see who is using AnimaltrackR unless
-you tell us and we’d love to hear about it!
-
-Now, you will now most likely want to conduct some behavioural analysis.
-There is currently no in-built or pre-defined pipeline for behavioural
-analysis using the tracks, so it is up to you to determine how best to
-proceed . Some examples of possible analyses include:
-
-- Assessment of space-use within the frame
-- Hidden Markov Models to classify behavioural states based on movement
-  patterns
-- Interactions with fixed objects in the frame
-
-Do let us know what you decide to do, if there is a demand for pre-built
-analytical solutions we will explore adding them to AnimalTrackR in the
-future.
+anything we can improve or features you would like to see. We can’t see
+who is using AnimaltrackR unless you tell us and we’d love to hear about
+it!

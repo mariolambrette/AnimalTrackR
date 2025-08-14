@@ -521,16 +521,6 @@ behaviour_viz(
 
 
 
-### Other downstream analyses
+### Thank you
 
-Other downstream analyses such as 
-
-**Congratulations!** You have successfully used AnimalTrackR to watch your experimental footage. Firstly, please do get in touch ([ml673@exeter.ac.uk](mailto:ml673@exeter.ac.uk)) and let us know how it went and if there is anything we can improve. We can't see who is using AnimaltrackR unless you tell us and we'd love to hear about it!
-
-Now, you will now most likely want to conduct some behavioural analysis. There is currently no in-built or pre-defined pipeline for behavioural analysis using the tracks, so it is up to you to determine how best to proceed . Some examples of possible analyses include:
-
-* Assessment of space-use within the frame
-* Hidden Markov Models to classify behavioural states based on movement patterns
-* Interactions with fixed objects in the frame
-
-Do let us know what you decide to do, if there is a demand for pre-built analytical solutions we will explore adding them to AnimalTrackR in the future.
+**Congratulations!** You have successfully used AnimalTrackR to watch your experimental footage. Firstly, please do get in touch ([ml673@exeter.ac.uk](mailto:ml673@exeter.ac.uk)) and let us know how it went and if there is anything we can improve or features you would like to see. We can't see who is using AnimaltrackR unless you tell us and we'd love to hear about it!
