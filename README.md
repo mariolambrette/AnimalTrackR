@@ -31,7 +31,7 @@ for this method will be added in due course.
 `AnimalTrackR` has multiple python dependencies. For the vast majority
 of users the built-in `create_TrackR_env()` function will handle all
 dependencies, however for users where this is not the case see the
-dependences documentation (run \`vignette(“AnimalTrackR-dependencies”)
+dependences documentation (run `vignette("AnimalTrackR-dependencies")`
 after installing AnimalTrackR)
 
 ## Quick start guide
@@ -680,8 +680,7 @@ models to animal detections to classify active and non-active behaviour:
 #                                                  #
 ####################################################
 
-# Ensure the correct AnimalTrackR project is active and set the 
-# working directory
+# Ensure the correct AnimalTrackR project is active and set the working directory
 set_Project("path/to/project")
 setwd(get_Project())
 
@@ -726,9 +725,8 @@ behaviour_viz(
 
 ### Thank you
 
-**Congratulations!** You have successfully used AnimalTrackR to watch
-your experimental footage. Firstly, please do get in touch
-(<ml673@exeter.ac.uk>) and let us know how it went and if there is
-anything we can improve or features you would like to see. We can’t see
-who is using AnimaltrackR unless you tell us and we’d love to hear about
-it!
+**Thank you** for using AnimalTrackR to watch your experimental footage.
+Please do get in touch (<ml673@exeter.ac.uk>) and let us know how it
+went and if there is anything we can improve or features you would like
+to see. We can’t see who is using AnimaltrackR unless you tell us and
+we’d love to hear about it!
