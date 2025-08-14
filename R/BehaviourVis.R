@@ -35,7 +35,8 @@
 #' @param class_column character string. The name of the column in the detections
 #'    dataframe containing the behavioural states (either as an output of the
 #'    `classification_function` or a previously computed column saved in the
-#'    specified csv file)
+#'    specified csv file). The default - "State" is the column computed by the
+#'    provided function `fit_HMM()`.
 #' @param ... Additional parameters to be passed to the `classification_function`
 #'
 #' @return Returns the detections data as a dataframe with the class column added
