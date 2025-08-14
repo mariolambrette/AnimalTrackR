@@ -88,8 +88,6 @@
 #'  nimgs = 1600
 #' )
 #' }
-
-
 extract_images <-
   function(videos,
            group_weights = NULL,
