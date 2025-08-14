@@ -48,7 +48,7 @@ This is a free video processing library that can be installed \href{https://ffmp
 }
 \examples{
 \dontrun{
-demo_run("path/to/short_clip.mp4")
+  demo_run("path/to/short_clip.mp4")
 }
 
 }

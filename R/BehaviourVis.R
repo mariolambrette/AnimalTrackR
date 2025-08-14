@@ -35,7 +35,8 @@
 #' @param class_column character string. The name of the column in the detections
 #'    dataframe containing the behavioural states (either as an output of the
 #'    `classification_function` or a previously computed column saved in the
-#'    specified csv file)
+#'    specified csv file). The default - "State" is the column computed by the
+#'    provided function `fit_HMM()`.
 #' @param ... Additional parameters to be passed to the `classification_function`
 #'
 #' @return Returns the detections data as a dataframe with the class column added
@@ -49,7 +50,7 @@
 #'     # e.g. assign points to clusters
 #'   }
 #'
-#'   BehaviourVis(
+#'   behaviour_viz(
 #'     detections_path = "path/to/TrackRDetections.csv",
 #'     vid_path = "path/to/video",
 #'     output_path = "path/to/save/output/mp4",
@@ -60,7 +61,7 @@
 #' @importFrom data.table fread
 #' @import reticulate
 
-BehaviourVis <- function(
+behaviour_viz <- function(
     detections_path,
     vid_path,
     output_path,
