@@ -1,20 +1,30 @@
 #' Fit a HMM to classify behavioural state of AnimalTrackR detections
 #'
 #' @description
-#' This function takes an AnimalTrackR detection file and fits a Hidden Markov
-#' Model to the bounding coordinates within it to classify behaviour into active
-#' and inactive states. Users supply the path to a detection file and a desired
+#' This function takes AnimalTrackR detection files and fits a Hidden Markov
+#' Model to the bounding coordinates within them to classify behaviour into active
+#' and inactive states. Users supply the path to detection files and a desired
 #' resolution for behavioural state classification. The updated detection file
 #' with behavioural states supplied in the "State" column is then saved in the
 #' original location.
+#'
+#' For studies were a single individual was recorded over multiple videos (i.e.
+#' there are multiple detection files that relate to a single individual), these
+#' files should all be passed to `fit_hmm()` together. Detection files from
+#' multiple individuals can also be passed together but users should be wary
+#' that this may differences in general behaviour between individuals to affect
+#' the overall results.
 #'
 #' To update a detection file where behavioural states have already been
 #' calculated, set the `overwrite` parameter to TRUE. Otherwise, the function
 #' will not refit states and will throw a warning.
 #'
 #'
-#' @param detections path to an AnimalTrackR detection file. These are the csv
-#'  files stored in the Detections/ directory of an AnimalTrackR project.
+#' @param detections path to an AnimalTrackR detection file(s). Multiple file
+#'  paths should be passed as a list of individual file paths. Detection files are the csv
+#'  files stored in the Detections/ directory of an AnimalTrackR project. One or
+#'  more detection file paths can be passed. Where multiple paths are used these
+#'  will internally be combined and a HMM will be fitted to the full dataset.
 #' @param state_fps The frame rate at which behavioural classification should
 #'  occur. The default is 3. Some applications where behaviour is more finely
 #'  resolved than this may benefit from a higher classification frame rate but
@@ -38,6 +48,7 @@
 #' @import magrittr
 #' @import moveHMM
 #' @importFrom dplyr filter pull mutate
+#' @importFrom plyr ldply
 #' @importFrom tidyr fill
 #' @importFrom stats sd
 #' @importFrom utils write.csv
@@ -45,10 +56,19 @@
 fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
 
 
-  # 1. Read detection file ----
+  # 1. Read detection file(s) ----
 
-  # read detections
-  dets_raw <- .read_detections(detections)
+  # Create video ids
+  vid_ids <- paste("video_", seq_along(1:length(detections)), sep = "")
+  names(detections) <- vid_ids
+
+  # Read detection files and add id column
+  dets_raw <- plyr::ldply(
+    detections,
+    .fun = .read_detections,
+    .id = "vid_id"
+  ) %>%
+    mutate(vid_id = as.character(vid_id))
 
   if ("State" %in% colnames(dets_raw)) {
     if (!overwrite) {
@@ -67,7 +87,8 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
   # 2. Down sample to required rate ----
 
   # Calculate frame rate of detections
-  dets_fps <- get_detections_fps(dets_raw)
+  dets_fps <- get_detections_fps(dets_raw %>%
+                                   filter(vid_id == "video_1"))
 
   hmm.data <- .downsample_to_fps(
     df = dets_raw,
@@ -133,7 +154,7 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     pull(angle) %>%
     sd(na.rm = T)
 
-  # 4. Fit HMM
+  # 4. Fit HMM ----
   mod <- moveHMM::fitHMM(
     data = hmm.data,
     nbStates = 2,
@@ -144,24 +165,44 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     angleDist = 'vm'
   )
 
-  # 5. Decode states of original detections
+  # 5. Decode states of original detections ----
   hmm.data <- hmm.data %>%
     dplyr::mutate(State = moveHMM::viterbi(mod))
 
-  # 6. Return dataframe in original format with added states
+  # 6. Return dataframe in original format with added states ----
   # Bind states in to full resolution data
   dets_raw <- dets_raw %>%
     dplyr::left_join(hmm.data %>% select(c("id", "State")), by = "id") %>%
     tidyr::fill(State, .direction = "downup") %>%
     dplyr::select(-id)
 
-  # Save the behavioural state detections into the original location
-  write.csv(
-    dets_raw,
-    file = detections,
-    row.names = F
-  )
+  # 7. Save updated detection files into the original location ----
+  dets_raw <- dets_raw %>%
+    group_by(vid_id) %>%
+    group_split()
 
+  plyr::llply(
+    dets_raw,
+    .fun = function(d) {
+
+      # Get video id and extract savepath from detevctions list
+      id <- d$vid_id[1]
+      sp <- detections[[id]]
+
+      # remove video id column from d
+      d <- d %>%
+        select(-vid_id)
+
+      # Save file into the original location
+      write.csv(
+        d,
+        file = sp,
+        row.names = F
+      )
+
+
+    }
+  )
 
   return(dets_raw)
 }
@@ -203,8 +244,9 @@ get_detections_fps <- function(detections) {
   }
 
   fps <- .calc_dets_frame_rate(
-    frame = detections$Frame,
-    timestamp = detections$Timestamp
+    detections,
+    frame_col = "Frame",
+    timestamp = "Timestamp"
   )
 
   return(round(fps))
@@ -297,6 +339,16 @@ get_detections_fps <- function(detections) {
     if (is.null(frame_col) || is.null(timestamp)) {
       stop("If 'frame' is a dataframe, provide 'frame_col' and 'timestamp' as column names.")
     }
+
+    # If multiple videos present only look at the first one
+    if ("vid_id" %in% names(frame)) {
+      if (length(unique(frame$vid_id)) > 1) {
+        vid_1 <- unique(frame$vid_d)[1]
+        frame <- frame %>%
+          filter(vid_id == vid_1)
+      }
+    }
+
     frame_vec <- frame[[frame_col]]
     ts_vec <- frame[[timestamp]]
   } else {
