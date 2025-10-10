@@ -7,8 +7,11 @@
 fit_HMM(detections, state_fps = 3, overwrite = F)
 }
 \arguments{
-\item{detections}{path to an AnimalTrackR detection file. These are the csv
-files stored in the Detections/ directory of an AnimalTrackR project.}
+\item{detections}{path to an AnimalTrackR detection file(s). Multiple file
+paths should be passed as a list of individual file paths. Detection files are the csv
+files stored in the Detections/ directory of an AnimalTrackR project. One or
+more detection file paths can be passed. Where multiple paths are used these
+will internally be combined and a HMM will be fitted to the full dataset.}
 
 \item{state_fps}{The frame rate at which behavioural classification should
 occur. The default is 3. Some applications where behaviour is more finely
@@ -24,12 +27,19 @@ behavioural state. Also saves the updated detections file with a 'State'
 column into the original location.
 }
 \description{
-This function takes an AnimalTrackR detection file and fits a Hidden Markov
-Model to the bounding coordinates within it to classify behaviour into active
-and inactive states. Users supply the path to a detection file and a desired
+This function takes AnimalTrackR detection files and fits a Hidden Markov
+Model to the bounding coordinates within them to classify behaviour into active
+and inactive states. Users supply the path to detection files and a desired
 resolution for behavioural state classification. The updated detection file
 with behavioural states supplied in the "State" column is then saved in the
 original location.
+
+For studies were a single individual was recorded over multiple videos (i.e.
+there are multiple detection files that relate to a single individual), these
+files should all be passed to \code{fit_hmm()} together. Detection files from
+multiple individuals can also be passed together but users should be wary
+that this may differences in general behaviour between individuals to affect
+the overall results.
 
 To update a detection file where behavioural states have already been
 calculated, set the \code{overwrite} parameter to TRUE. Otherwise, the function
