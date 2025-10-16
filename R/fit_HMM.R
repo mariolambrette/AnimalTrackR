@@ -59,7 +59,11 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
   # 1. Read detection file(s) ----
 
   # Create video ids
+<<<<<<< HEAD
   vid_ids <- paste("video_", seq_along(1:length(detections)), sep = "")
+=======
+  vid_ids <- paste("video_", seq_along(1:length(detections)))
+>>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
   names(detections) <- vid_ids
 
   # Read detection files and add id column
@@ -67,8 +71,12 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     detections,
     .fun = .read_detections,
     .id = "vid_id"
+<<<<<<< HEAD
   ) %>%
     mutate(vid_id = as.character(vid_id))
+=======
+  )
+>>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
 
   if ("State" %in% colnames(dets_raw)) {
     if (!overwrite) {
@@ -186,12 +194,21 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     .fun = function(d) {
 
       # Get video id and extract savepath from detevctions list
+<<<<<<< HEAD
       id <- d$vid_id[1]
       sp <- detections[[id]]
 
       # remove video id column from d
       d <- d %>%
         select(-vid_id)
+=======
+      id <- d$video_id[1]
+      sp <- detections$id
+
+      # remove video id column from d
+      d <- d %>%
+        select(-video_id)
+>>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
 
       # Save file into the original location
       write.csv(
