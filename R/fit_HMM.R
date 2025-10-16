@@ -59,11 +59,7 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
   # 1. Read detection file(s) ----
 
   # Create video ids
-<<<<<<< HEAD
   vid_ids <- paste("video_", seq_along(1:length(detections)), sep = "")
-=======
-  vid_ids <- paste("video_", seq_along(1:length(detections)))
->>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
   names(detections) <- vid_ids
 
   # Read detection files and add id column
@@ -71,12 +67,9 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     detections,
     .fun = .read_detections,
     .id = "vid_id"
-<<<<<<< HEAD
   ) %>%
     mutate(vid_id = as.character(vid_id))
-=======
-  )
->>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
+
 
   if ("State" %in% colnames(dets_raw)) {
     if (!overwrite) {
@@ -85,6 +78,9 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
         "To overwrite these set the `overwrite` parameter to TRUE.", call. = FALSE)
       return(invisible(NULL))
     }
+
+    dets_raw <- dets_raw %>%
+      select(-State)
   }
 
   # Add identifier column
@@ -194,21 +190,12 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
     .fun = function(d) {
 
       # Get video id and extract savepath from detevctions list
-<<<<<<< HEAD
       id <- d$vid_id[1]
       sp <- detections[[id]]
 
       # remove video id column from d
       d <- d %>%
         select(-vid_id)
-=======
-      id <- d$video_id[1]
-      sp <- detections$id
-
-      # remove video id column from d
-      d <- d %>%
-        select(-video_id)
->>>>>>> 67f0725a34b9e4532b152fdc3deb5500b7b54dca
 
       # Save file into the original location
       write.csv(
@@ -355,15 +342,6 @@ get_detections_fps <- function(detections) {
   if (is.data.frame(frame)) {
     if (is.null(frame_col) || is.null(timestamp)) {
       stop("If 'frame' is a dataframe, provide 'frame_col' and 'timestamp' as column names.")
-    }
-
-    # If multiple videos present only look at the first one
-    if ("vid_id" %in% names(frame)) {
-      if (length(unique(frame$vid_id)) > 1) {
-        vid_1 <- unique(frame$vid_d)[1]
-        frame <- frame %>%
-          filter(vid_id == vid_1)
-      }
     }
 
     frame_vec <- frame[[frame_col]]
