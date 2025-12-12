@@ -48,7 +48,8 @@ utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
 .create_YOLO_config <- function(project = get_Project()){
 
   if (is.null(get_Project())) {
-    stop("No active TrackR project found. Please activate a project with `set_Project()` or create one with `init_Project()`")
+    stop("No active TrackR project found. Please activate a project with 
+          `set_Project()` or create one with `init_Project()`")
   }
 
   # Create the names list of configurations
@@ -106,6 +107,5 @@ restore_train_config <- function(project = get_Project()) {
 
   cat("Hyperparameter file restored to default.")
 
-  return(invisible(T))
+  return(invisible(TRUE))
 }
-

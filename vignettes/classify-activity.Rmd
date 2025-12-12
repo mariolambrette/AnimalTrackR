@@ -1,0 +1,339 @@
+---
+title: "Classifying Activity From Detections"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{classify-activity}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette explores the `classify_activity()` function in
+AnimalTrackR. The various options in the pipeline are explored and usage
+examples are provided. The function is designed to be a broad, flexible
+interface, allowing users to explore a variety of different
+classification methods and feature sets to determine which is best
+suited to their specific data. The information here assumes that the
+user has already processed their video data to obtain detection data
+frames using the `run_Model()` function and is now ready to move into
+post-processing and behaviour classification.
+
+## Overview of `classify_activity()`
+
+The `classify_activity()` function is the main interface for classifying
+animal activity from detection data.
+
+The classification pipeline involves five key steps:
+
+1.  [Feature calculation](#feature-calculation)
+2.  [Outlier handling](#outlier-handling)
+3.  [Feature normalisation](#feature-normalisation)
+4.  [Composite activity score calculation](#composite-activity-score-calculation)
+5.  [Activity classification](#activity-classification)
+
+and currently supports four classification methods:
+
+* [Threshold-based classification](#threshold)
+* [Changepoint detection](#changepoint-detection)
+* [Gaussian Mixture Models (GMM)](#gmm)
+* [Hidden Markov Models (HMM) - Reccomended](#hmm)
+
+Each of these stages and methods are described, with example code,
+below.
+
+## Example Usage
+
+```{r setup}
+library(AnimalTrackR)
+```
+
+```{r example-usage, eval=FALSE, echo=TRUE}
+classify_activity(
+  dets,
+  method = "gmm",
+  features = c("speed", "acceleration", "turning"),
+  n_states = 2,
+  window_size = 5,
+  composite_method = "mean",
+  feature_weights = NULL,
+  indiv_id = NULL,
+  cpt_method = "mean",
+  pause_threshold = NULL,
+  video_id = "Video"
+)
+
+```
+
+The above snippet shows the default usage of the `classify_activity()`
+function. The function takes a data frame of
+detections (`dets`) which can be the result of loading a CSV detection
+file with `read.csv()` or `fread()`, or several detection files bound
+together into a single larger data frame. The function returns a data
+frame with the same rows as the input detections, but with additional
+columns for the calculated features and the classified activity state.
+
+The individual parameters are described in detail in the [function documentation](help("classify_activity")) and other usage
+options are explored in more detail below.
+
+## Feature Calculation {#feature-calculation}
+
+The first step in the activity classification pipeline is to calculate
+movement features from the raw detections. Features are any metric that
+can be calculated from the movement of the detected animals over time.
+The `classify_activity()` function supports the following features:
+
+-   `"speed"` - The speed of the animal between consecutive detections
+    calculated as pixels per frame.
+-   `"acceleration"` - The acceleration of the animal between
+    consecutive detections calculated as change in speed per frame.
+-   `"turning"` - Absolute turning angle of the animal between
+    consecutive detections in radians.
+-   `"speed_var"` - The variance in speed over the rolling window of
+    size specified in the `window_size` parameter.
+-   `"speed_smooth"` - The smoothed speed (mean) over the rolling window
+    of size specified in the `window_size` parameter.
+-   `"meander"` - A measure of path tortuosity. It is the mean of
+    `turning` over the rolling window of size specified in the
+    `window_size` parameter.
+-   `"path_straightness"` - Another measure of path tortuosity. It is
+    calculated as the ratio of the straight-line distance between the
+    start and end points of the rolling window to the total path length
+    over the rolling window.
+-   `"paused"` - A binary indicator of whether or not the animal is
+    paused. A pause is defined as a composite activity score below the
+    threshold specified in the `pause_threshold` parameter.
+-   `"time_since_pause"` - The number of frames since the animal was
+    last paused.
+-   `"spatial_spread"` - An indiciation of the range of x and y
+    coordinates occupied by the animal over the rolling window. It is
+    calculated as the euclidean distance of the standard deviations of
+    all x and y coordinates: `sqrt(sd_x^2 + sd_y^2)`.
+-   `"edge_preference"` - A measure of the animal's preference for the
+    edges of its range. The centroid of all x and y positions in the
+    video is calculated and the feature is calcualted as the current
+    distance from the centroid (per frame) divided by the maximum
+    distance from the centroid.
+-   `"roaming_entropy"` - A measure of the diversity of locations
+    occupied by the animal over the rolling window. The video frame is
+    divided into a grid of cells and the proportion of time spent in
+    each cell is calculated. The roaming entropy is then calculated as
+    the Shannon entropy of these proportions.
+
+When calling the `classify_activity()` function, the user must specify
+which features to calculate using the `features` parameter. This
+parameter takes a character vector of feature names. Multiple features
+can be specified, and the function will calculate all specified features
+and use them in the subsequent steps of the classification pipeline.
+
+Should users wish to explore the features directly, the
+`calculate_movement_features()` function can be used to calculate
+features without performing activity classification. This is the
+function used internally by `classify_activity()`
+
+```{r calculate-features, eval=FALSE, echo=TRUE}
+calculate_movement_features(
+  dets,
+  features = c("speed", "acceleration", "turning"),
+  window_size = 5,
+  pause_threshold = NULL
+)
+```
+
+### Custom features
+
+There is currently no functionality within `classify_activity()` to
+support custom features. however, this is an area of active development
+and we will aim to support custom feature definitions in the near
+future.
+
+## Outlier Handling {#outlier-handling}
+
+The nature of the detection data means that erroneous locations are
+possible. These outlier locations can cause calculated features for
+specific frames to be far outside of the range of other values. Outliers
+can have a significant deleterious impact on some classification
+methods, particularly the more sophisticated HMM and GMM methods which
+rely on feature distributions. Furthermore, when features are normalised
+extreme outliers can skew the normalisation calculation and limit the
+range of biologically meaningful values, thereby reducing the influence
+of that feature on the behavioural classification. As such, the
+`classify_activity()` function includes an outlier handling step to
+mitigate any potential impact.
+
+Outliers are capped at the 1st and 99th percentiles of each feature's
+distribution. This means that any feature value below the 1st percentile
+is set to the 1st percentile value, and any feature value above the 99th
+percentile is set to the 99th percentile value. This approach preserves
+the overall distribution of the feature while limiting the influence of
+extreme outliers.
+
+## Feature Normalisation {#feature-normalisation}
+
+Each calculated feature is expressed on very different scales. This
+means that if left in their raw form they will contribute differently to
+the calculation of a composite activity score.
+
+To ensure that each feature contributes equally, they are normalised to
+a [0,1] scale using min-max normalisation. This rescales each feature
+such that the minimum value of the feature becomes 0 and the maximum
+value becomes 1. The normalised value for each feature is calculated
+using the formula:
+
+```         
+X_norm = (X - X_min) / (X_max - X_min)
+```
+
+Where `X` is the current feature value, `X_min` is the minimum value of
+the feature across all detections, and `X_max` is the maximum value of
+the feature across all detections.
+
+The one exception to feature normalisation is the HMM method with which
+fits models directly to the raw feature distributions. In this case,
+normalisation is skipped.
+
+## Composite Activity Score Calculation {#composite-activity-score-calculation}
+
+Once features have been calculated and normalised, a composite activity
+score is calculated for each detection. This score is a single value
+that summarises the overall activity level of the animal at that time
+point, based on the selected features. It allows the threshold and
+changepoint methods to classify activity based on a single timeseries.
+
+The composite activity score can be calculated using one of three
+methods:
+
+-   `"mean"` - The composite score is the mean of all selected features.
+-   `"pca"` - The composite score is the first principal component of
+    all selected features. This method captures the maximum variance in
+    the feature set.
+-   `"weighted"` - The composite score is a weighted mean of all
+    selected features. The weights for each feature must be provided by
+    the user using the `feature_weights` parameter.
+
+The composite activity score is ignored the `"gmm"` and `"hmm"` methods
+as these methods can classify activity based on multiple features.
+
+## Activity Classification {#activity-classification}
+
+The main drivers of the `classify_activity()` function are a set of
+internal functions that implement different activity classification
+methods. The user selects which method is used via the `method`
+parameter. The available methods are described in more detail below:
+
+### Threshold
+
+The threshold method uses an otsu threshold calculation to determine the
+value which separates the composite activity score into groups with
+minimal within-group variance.
+
+This method is most effective when the underlying data has a bimodal
+distribution. In many typical cases where 'activity level' varies on a
+gamma-like distribution, this method may not be optimal. However, if the
+composite activity score can be tuned to produce a bimodal distribution
+(e.g. by selecting appropriate features and weights) then this method
+can be an easily intepretable and effective approach.
+
+### Changepoint Detection
+
+The changepoint detection method uses the `changepoint` R package to
+identify points in the composite activity score timeseries where the
+statistical properties of the data change significantly.
+
+The method implementation is flexible, users can select whether they
+would like to look for changes in the mean, variance, or both using the
+`cpt_method` parameter. This method is effective for identifying shifts
+in activity levels over time. However, it may be sensitive to noise in
+the data and requires careful tuning of the composite activity score and
+post-hoc analysis to verify changepoints.
+
+The actual calls to the changepoint function are shown below:
+
+```{r changepoint-code, eval=FALSE, echo=TRUE}
+if (cpt_method == "mean") {
+  # Detect changepoints in mean
+  cpt <- changepoint::cpt.mean(
+    composite_activity_score,
+    method = "PELT",
+    penalty = "BIC"
+  )
+} else if (cpt_method == "meanvar") {
+  # Detect changepoints in mean and variance
+  cpt <- changepoint::cpt.meanvar(
+    composite_activity_score,
+    method = "PELT",
+    penalty = "BIC"
+  )
+} else if (cpt_method == "var") {
+  # Detect changepoints in variance
+  cpt <- changepoint::cpt.var(
+    composite_activity_score,
+    method = "PELT",
+    penalty = "BIC"
+  )
+}
+```
+
+Based on the identified changepoints, activity is classified into either
+active or inactive states by looking at the mean activity level in each
+segment and comparing it to the global median.
+
+### Gaussian Mixture Models (GMM) {#gmm}
+
+The GMM method fits a Gaussian Mixture Model to all normalised features.
+The GMM approach assumes the underlying data are made up of `n_states`
+groups which each follow a Gaussian distribution. The model fits these
+distributions to the data and classifies each detection into one of the
+`n_states` groups based on the highest probability of membership. The
+biggest limitation of GMMs in this context is that they lack any
+temporal structure (i.e. their is an underlying assumption that each
+data point is temporally independent). In most cases this will not be
+the case for AnimalTrackR detections, which are inherently a timeseries.
+Features which are calculated over larger rolling windows may show
+greater temporal independence from each other, and in those cases GMMs
+may fit the data well, but users should be wary of the limitations of
+GMMs when selecting them over Hidden Markov Models for behavioural state
+classification.
+
+### Hidden Markov Models (HMM) - Reccomended {#hmm}
+
+The `"hmm"` method fits a Hidden Markov Model (HMM) with `n_states`
+hidden states to the raw features using the `hmmTMB` package. HMMs
+assume that the observed data fits into `n_states` hidden states which
+each follow their own distribution. They assign each observation to one
+of these hidden states and account for temporal structure in the data by
+modelling the transition probabilities between states. The temporal
+structure and distribution shape flexibility make HMMs the most powerful
+and recommended method for activity classification in AnimalTrackR.
+
+The specific implementation used here:
+
+-   Automatically determines the best fitting distribution for each
+    selected feature
+-   Uses a Gaussian Mixture Model to initialise distribution parameters
+    before HMM fitting to optimise convergence
+-   Fits the HMM using the `hmmTMB` package which leverages the `TMB`
+    package for fast model fitting
+-   Uses the Viterbi algorithm to determine the most likely sequence of
+    hidden states for each detection
+-   Fits a new model to each individual (specified with `indiv_id`) to
+    account for potential individual variations in behaviour.
+
+While the other methods are all valid and may perform well in specific
+cases, the HMM method is the most robust method and is reccomended for
+most users. However, careful consideration of the selected features is
+still required. In the subsequent section, a full HMM implementation is
+dicussed in more detail with reference to optimising feature selection.
+
+## A Worked Example
+
+Give a detailed worked example of how to optimise features and other
+parameters for classification.

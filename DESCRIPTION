@@ -21,7 +21,13 @@ Imports:
     yaml,
     moveHMM,
     tidyr,
-    stats
+    stats,
+    CircStats,
+    changepoint,
+    fitdistrplus,
+    hmmTMB,
+    mclust,
+    rlang
 Suggests: 
     knitr,
     rmarkdown,

@@ -316,6 +316,14 @@ set_TrackR_env <- function(envname = "animaltrackr"){
 
 check_TrackR_env <- function(envname = "animaltrackr"){
 
+  # Check the environment exists
+  if (!reticulate::condaenv_exists(envname)) {
+    stop(paste0(
+      "No conda environment with name ", envname,
+      " found.\nCheck `envname` and try again"
+    ))
+  }
+
   # Check if required Python modules are available
   ul <- reticulate::py_module_available("ultralytics")
   cv <- reticulate::py_module_available("cv2")

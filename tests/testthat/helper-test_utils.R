@@ -209,3 +209,123 @@ cleanup_temp_project <- function(project_path) {
     unlink(project_path, recursive = TRUE, force = TRUE)
   }
 }
+
+
+# Classification Testing Helpers ------------------------------------------
+
+#' Create sample movement data for classification tests
+#'
+#' @param n_obs Number of observations
+#' @param n_states Number of distinct behavioral states to simulate
+#' @param add_noise Logical. Should random noise be added?
+#' @return data.frame with movement features
+create_sample_movement_data <- function(n_obs = 200, n_states = 2, add_noise = TRUE) {
+  # Create state assignments
+  state_length <- n_obs %/% n_states
+  states <- rep(1:n_states, each = state_length)[1:n_obs]
+  
+  # Initialize data frame
+  data <- data.frame(
+    Video = rep("test_video.mp4", n_obs),
+    Frame = seq(1, n_obs * 10, by = 10),
+    Timestamp = seq(0, (n_obs - 1) * 100, by = 100)
+  )
+  
+  # Create distinct movement patterns for each state
+  for (i in 1:n_states) {
+    idx <- which(states == i)
+    
+    if (i == 1) {
+      # Low activity state
+      data$speed[idx] <- rnorm(length(idx), mean = 2, sd = 0.5)
+      data$acceleration[idx] <- rnorm(length(idx), mean = 0, sd = 0.2)
+      data$turning_angle[idx] <- rnorm(length(idx), mean = 0, sd = 15)
+    } else {
+      # High activity state
+      data$speed[idx] <- rnorm(length(idx), mean = 8, sd = 1.5)
+      data$acceleration[idx] <- rnorm(length(idx), mean = 0.5, sd = 0.5)
+      data$turning_angle[idx] <- rnorm(length(idx), mean = 0, sd = 45)
+    }
+  }
+  
+  # Add additional movement features
+  data$distance <- data$speed * 0.1  # Assuming 100ms between frames
+  data$angular_velocity <- data$turning_angle / 0.1
+  data$jerk <- c(0, diff(data$acceleration))
+  
+  # Add noise if requested
+  if (add_noise) {
+    data$speed <- pmax(0, data$speed + rnorm(n_obs, 0, 0.1))
+    data$acceleration <- data$acceleration + rnorm(n_obs, 0, 0.05)
+    data$turning_angle <- data$turning_angle + rnorm(n_obs, 0, 5)
+  }
+  
+  return(data)
+}
+
+
+#' Create detections data suitable for feature calculation
+#'
+#' @param n_obs Number of observations
+#' @param add_trajectory_id Logical. Should trajectory_id column be added?
+#' @param video_col_name Name for the video column (default "Video")
+#' @return data.frame with detection coordinates
+create_sample_detections_data <- function(n_obs = 100, add_trajectory_id = FALSE, video_col_name = "Video") {
+  # Create a realistic trajectory with varying speed
+  t <- seq(0, 2 * pi, length.out = n_obs)
+  
+  # Add speed variation - alternate between slow and fast movement
+  speed_mult <- ifelse(t < pi, 0.5, 2.0)  # Slow first half, fast second half
+  
+  detections <- data.frame(
+    Frame = seq(1, n_obs * 10, by = 10),
+    Timestamp = seq(0, (n_obs - 1) * 100, by = 100),
+    xc = 320 + 100 * cos(t) * speed_mult + rnorm(n_obs, 0, 10),
+    yc = 240 + 100 * sin(t) * speed_mult + rnorm(n_obs, 0, 10),
+    xl = 0,
+    xr = 640,
+    yt = 0,
+    yb = 480
+  )
+  
+  # Add video column with specified name
+  detections[[video_col_name]] <- rep("test_video.mp4", n_obs)
+  
+  if (add_trajectory_id) {
+    detections$trajectory_id <- rep("track_1", n_obs)
+  }
+  
+  return(detections)
+}
+
+
+#' Check if optional classification package is available
+#'
+#' @param package Package name (e.g., "mclust", "changepoint", "hmmTMB")
+#' @return Logical
+has_classification_package <- function(package) {
+  requireNamespace(package, quietly = TRUE)
+}
+
+
+#' Skip test if classification package not available
+#'
+#' @param package Package name
+skip_if_no_package <- function(package) {
+  if (!has_classification_package(package)) {
+    testthat::skip(paste0("Package '", package, "' not available"))
+  }
+}
+
+
+#' Create minimal feature data frame for testing
+#'
+#' @return data.frame with movement features
+create_minimal_features <- function() {
+  data.frame(
+    speed = c(1, 2, 3, 2, 1, 5, 6, 7, 6, 5),
+    acceleration = c(0, 1, 1, -1, -1, 4, 1, 1, -1, -1),
+    turning_angle = c(0, 10, 20, 10, 0, 30, 40, 50, 40, 30),
+    distance = c(0.1, 0.2, 0.3, 0.2, 0.1, 0.5, 0.6, 0.7, 0.6, 0.5)
+  )
+}

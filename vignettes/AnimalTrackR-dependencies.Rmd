@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, echo=FALSE}
 library(AnimalTrackR)
 ```
 
@@ -34,7 +34,7 @@ AnimalTrackR has been tested using python 3.11. Many of its dependencies will wo
 
 AnimalTrackR has two core python package dependencies; ultalytics and opencv.
 
-**ultralytics** is the python API for YOLO. More details are available [here](https://docs.ultralytics.com/)
+**ultralytics** is a python API for YOLO. More details are available [here](https://docs.ultralytics.com/)
 **opencv** is a widely used computer vision library that is essential for basic operations performed by AnimaltrackR. See [here](https://pypi.org/project/opencv-python/) for details.
 
 If you are using a CPU only installing the most recent version of these packages should not give you any issues.
