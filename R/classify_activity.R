@@ -37,6 +37,8 @@
 #'  \item \code{"speed"} - Instantaneous speed (pixels per frame)
 #'  \item \code{"acceleration"} - Change in speed between frames
 #'  \item \code{"turning"} - Absolute turning angle (radians)
+#'  \item \code{"heading"} - Absolute heading (radians)
+#'  \item \code{"heading_smooth"} - Heading smoothed over rolling window
 #'  \item \code{"speed_var"} - Variance in speed over rolling window
 #'  \item \code{"speed_smooth"} - Speed smoothed over rolling window
 #'  \item \code{"meander"} - Path tortuosity measure
@@ -227,7 +229,7 @@ classify_activity <- function(
                       "speed_smooth", "meander",
                       "path_straightness", "paused",
                       "time_since_pause", "spatial_spread", "edge_preference",
-                      "roaming_entropy", "heading")
+                      "roaming_entropy", "heading", "heading_smooth")
   invalid_features <- setdiff(features, valid_features)
   if (length(invalid_features) > 0) {
     stop(

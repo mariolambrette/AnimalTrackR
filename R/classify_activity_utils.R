@@ -145,7 +145,7 @@ calculate_movement_features <- function(
 
   ## HEADING ------------------------------------------------------------------
 
-  heading_features <- c("heading", "meander", "path_straightness")
+  heading_features <- c("heading", "meander", "path_straightness", "heading_smooth")
 
   if (any(heading_features %in% features)) {
 
@@ -153,6 +153,17 @@ calculate_movement_features <- function(
       dplyr::mutate(
         heading = atan2(.data$dy, .data$dx)
       )
+
+    if ("heading_smooth" %in% features) {
+
+      dets <- dets %>%
+        dplyr::mutate(
+          heading_smooth = data.table::frollmean(
+            .data$heading,
+            n = window_size,
+            align = "center"
+          )
+        )
 
   }
 
