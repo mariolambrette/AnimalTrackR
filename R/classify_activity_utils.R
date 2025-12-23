@@ -164,6 +164,7 @@ calculate_movement_features <- function(
             align = "center"
           )
         )
+    }
 
   }
 

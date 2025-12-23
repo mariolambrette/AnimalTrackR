@@ -44,6 +44,8 @@ classification. Options include: \itemize{
 \item \code{"speed"} - Instantaneous speed (pixels per frame)
 \item \code{"acceleration"} - Change in speed between frames
 \item \code{"turning"} - Absolute turning angle (radians)
+\item \code{"heading"} - Absolute heading (radians)
+\item \code{"heading_smooth"} - Heading smoothed over rolling window
 \item \code{"speed_var"} - Variance in speed over rolling window
 \item \code{"speed_smooth"} - Speed smoothed over rolling window
 \item \code{"meander"} - Path tortuosity measure
