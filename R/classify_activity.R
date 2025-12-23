@@ -227,7 +227,7 @@ classify_activity <- function(
                       "speed_smooth", "meander",
                       "path_straightness", "paused",
                       "time_since_pause", "spatial_spread", "edge_preference",
-                      "roaming_entropy")
+                      "roaming_entropy", "heading")
   invalid_features <- setdiff(features, valid_features)
   if (length(invalid_features) > 0) {
     stop(

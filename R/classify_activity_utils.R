@@ -26,6 +26,7 @@
 #'  \item \code{"speed"} - Instantaneous speed (pixels per frame)
 #'  \item \code{"acceleration"} - Change in speed between frames
 #'  \item \code{"turning"} - Absolute turning angle (radians)
+#'  \item \code{"heading"} - Instantaneous movement direction (radians)
 #'  \item \code{"speed_var"} - Variance in speed over rolling window
 #'  \item \code{"speed_smooth"} - Speed smoothed over rolling window
 #'  \item \code{"meander"} - Path tortuosity measure
@@ -142,6 +143,19 @@ calculate_movement_features <- function(
 
   }
 
+  ## HEADING ------------------------------------------------------------------
+
+  heading_features <- c("heading", "meander", "path_straightness")
+
+  if (any(heading_features %in% features)) {
+
+    dets <- dets %>%
+      dplyr::mutate(
+        heading = atan2(.data$dy, .data$dx)
+      )
+
+  }
+
   ## ROLLING SPPED FEATURES ----------------------------------------------------
 
   if ("speed_var" %in% features) {
@@ -173,93 +187,84 @@ calculate_movement_features <- function(
 
   ## DIRECTIONAL PERSISTENCE ---------------------------------------------------
 
-  if (any(c("meander", "path_straightness") %in% features)) {
+  # Meander: rolling mean of absolute heading change
+  if ("meander" %in% features) {
 
     dets <- dets %>%
       dplyr::mutate(
-        heading = atan2(.data$dy, .data$dx)
+        heading_change = {
+          h_diff <- .data$heading - dplyr::lag(.data$heading)
+
+          # Correct for angle wrapping
+          h_diff <- ifelse(h_diff > pi, h_diff - 2 * pi, h_diff)
+          h_diff <- ifelse(h_diff < -pi, h_diff + 2 * pi, h_diff)
+
+          abs(h_diff)
+        },
+
+        meander = data.table::frollmean(
+          .data$heading_change,
+          n = window_size,
+          align = "center"
+        )
       )
 
-    # Meander: rolling mean of absolute heading change
-    if ("meander" %in% features) {
+  }
 
-      dets <- dets %>%
-        dplyr::mutate(
-          heading_change = {
-            h_diff <- .data$heading - dplyr::lag(.data$heading)
+  # Path straightness: ratio of net displacement to total path length over
+  # rolling window
 
-            # Correct for angle wrapping
-            h_diff <- ifelse(h_diff > pi, h_diff - 2 * pi, h_diff)
-            h_diff <- ifelse(h_diff < -pi, h_diff + 2 * pi, h_diff)
+  if ("path_straightness" %in% features) {
 
-            abs(h_diff)
-          },
-
-          meander = data.table::frollmean(
-            .data$heading_change,
+    dets <- dets %>%
+      dplyr::mutate(
+        path_straightness = {
+          # Rolling sum of distance travelled
+          path_length <- data.table::frollsum(
+            sqrt(.data$dx^2 + .data$dy^2),
             n = window_size,
             align = "center"
           )
-        )
 
-    }
+          # Net displacement over window
+          x_start <- data.table::frollapply(
+            .data$xc,
+            n = window_size,
+            FUN = function(x) x[1],
+            align = "center"
+          )
 
-    # Path straightness: ratio of net displacement to total path length over
-    # rolling window
+          y_start <- data.table::frollapply(
+            .data$yc,
+            n = window_size,
+            FUN = function(y) y[1],
+            align = "center"
+          )
 
-    if ("path_straightness" %in% features) {
+          x_end <- data.table::frollapply(
+            .data$xc,
+            n = window_size,
+            FUN = function(x) x[length(x)],
+            align = "center"
+          )
 
-      dets <- dets %>%
-        dplyr::mutate(
-          path_straightness = {
-            # Rolling sum of distance travelled
-            path_length <- data.table::frollsum(
-              sqrt(.data$dx^2 + .data$dy^2),
-              n = window_size,
-              align = "center"
-            )
+          y_end <- data.table::frollapply(
+            .data$yc,
+            n = window_size,
+            FUN = function(y) y[length(y)],
+            align = "center"
+          )
 
-            # Net displacement over window
-            x_start <- data.table::frollapply(
-              .data$xc,
-              n = window_size,
-              FUN = function(x) x[1],
-              align = "center"
-            )
+          net_displacement <- sqrt((x_end - x_start)^2 + (y_end - y_start)^2)
 
-            y_start <- data.table::frollapply(
-              .data$yc,
-              n = window_size,
-              FUN = function(y) y[1],
-              align = "center"
-            )
-
-            x_end <- data.table::frollapply(
-              .data$xc,
-              n = window_size,
-              FUN = function(x) x[length(x)],
-              align = "center"
-            )
-
-            y_end <- data.table::frollapply(
-              .data$yc,
-              n = window_size,
-              FUN = function(y) y[length(y)],
-              align = "center"
-            )
-
-            net_displacement <- sqrt((x_end - x_start)^2 + (y_end - y_start)^2)
-
-            # Straghtness = net displacement / path length
-            ifelse(
-              path_length > 0,
-              net_displacement / path_length,
-              NA_real_
-            )
-          }
-        )
-
-    }
+          # Straghtness = net displacement / path length
+          ifelse(
+            path_length > 0,
+            net_displacement / path_length,
+            NA_real_
+          )
+        }
+      )
 
   }
 
