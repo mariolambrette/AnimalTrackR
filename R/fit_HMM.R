@@ -53,7 +53,7 @@
 #' @importFrom stats sd
 #' @importFrom utils write.csv
 
-fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
+fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100) {
 
 
   # 1. Read detection file(s) ----
@@ -116,7 +116,7 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F) {
   # Calculate the mean and standard deviation for step length and turning angle for
   # data above and and below the threshold (1 = under threshold, 2 = over threshold)
 
-  threshold <- 100
+  threshold <- threshold
 
   st.mu.1 <- hmm.data %>%
     filter(step < threshold) %>%
