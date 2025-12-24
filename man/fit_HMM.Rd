@@ -4,7 +4,13 @@
 \alias{fit_HMM}
 \title{Fit a HMM to classify behavioural state of AnimalTrackR detections}
 \usage{
-fit_HMM(detections, state_fps = 3, overwrite = F)
+fit_HMM(
+  detections,
+  state_fps = 3,
+  overwrite = F,
+  threshold = 100,
+  state_col = "State"
+)
 }
 \arguments{
 \item{detections}{path to an AnimalTrackR detection file(s). Multiple file
@@ -20,6 +26,14 @@ in most cases this will add unnecessary noise.}
 
 \item{overwrite}{T/F. If TRUE, existing behavioural state classifications for
 the provided detection file will be overwritten.}
+
+\item{threshold}{Integer. The threshold to use for initial parameter
+estimation. The mean and standard deviation of step lengths above and below
+the threshold will be used.}
+
+\item{state_col}{character string. The name of the column under which to save
+state assignments. Defaults to State but can be modifed if users would like
+to compare multiple configurations.}
 }
 \value{
 a dataframe of detections with a 'state' column showing the

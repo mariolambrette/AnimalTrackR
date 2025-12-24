@@ -31,6 +31,12 @@
 #'  in most cases this will add unnecessary noise.
 #' @param overwrite T/F. If TRUE, existing behavioural state classifications for
 #'  the provided detection file will be overwritten.
+#' @param threshold Integer. The threshold to use for initial parameter
+#'  estimation. The mean and standard deviation of step lengths above and below
+#'  the threshold will be used.
+#' @param state_col character string. The name of the column under which to save
+#'  state assignments. Defaults to State but can be modifed if users would like
+#'  to compare multiple configurations.
 #'
 #' @returns a dataframe of detections with a 'state' column showing the
 #'  behavioural state. Also saves the updated detections file with a 'State'
@@ -53,7 +59,8 @@
 #' @importFrom stats sd
 #' @importFrom utils write.csv
 
-fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100) {
+fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
+                    state_col = "State") {
 
 
   # 1. Read detection file(s) ----
@@ -71,16 +78,16 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100) {
     mutate(vid_id = as.character(vid_id))
 
 
-  if ("State" %in% colnames(dets_raw)) {
+  if (state_col %in% colnames(dets_raw)) {
     if (!overwrite) {
       warning(
-        "Supplied detection file already contains behavioural states. ",
-        "To overwrite these set the `overwrite` parameter to TRUE.", call. = FALSE)
+        "Supplied `state_col` already exists. ",
+        "To overwrite the column set the `overwrite` parameter to TRUE.", call. = FALSE)
       return(invisible(NULL))
     }
 
     dets_raw <- dets_raw %>%
-      select(-State)
+      select(-all_of(state_col))
   }
 
   # Add identifier column
@@ -171,13 +178,13 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100) {
 
   # 5. Decode states of original detections ----
   hmm.data <- hmm.data %>%
-    dplyr::mutate(State = moveHMM::viterbi(mod))
+    dplyr::mutate("{state_col}" := moveHMM::viterbi(mod))
 
   # 6. Return dataframe in original format with added states ----
   # Bind states in to full resolution data
   dets_raw <- dets_raw %>%
-    dplyr::left_join(hmm.data %>% select(c("id", "State")), by = "id") %>%
-    tidyr::fill(State, .direction = "downup") %>%
+    dplyr::left_join(hmm.data %>% select(c("id", state_col)), by = "id") %>%
+    tidyr::fill(all_of(state_col), .direction = "downup") %>%
     dplyr::select(-id)
 
   # 7. Save updated detection files into the original location ----
