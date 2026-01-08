@@ -596,7 +596,7 @@ calculate_movement_features <- function(
 #'   GMM model object is stored as attribute "gmm_model"
 #'
 #' @keywords internal
-#' @import mclust
+#' @importFrom mclust Mclust
 #' @importFrom stats complete.cases
 
 .classify_gmm <- function(dets, feature_cols, n_states) {

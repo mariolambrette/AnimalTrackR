@@ -58,6 +58,7 @@
 #' @importFrom tidyr fill
 #' @importFrom stats sd
 #' @importFrom utils write.csv
+#' @importFrom rlang .data :=
 
 fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
                     state_col = "State") {
@@ -73,9 +74,9 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
   dets_raw <- plyr::ldply(
     detections,
     .fun = .read_detections,
-    .id = "vid_id"
+    .id = "ID"
   ) %>%
-    mutate(vid_id = as.character(vid_id))
+    mutate(ID = as.character(.data$ID))
 
 
   if (state_col %in% colnames(dets_raw)) {
@@ -92,14 +93,14 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
 
   # Add identifier column
   dets_raw <- dets_raw %>%
-    dplyr::mutate(id = seq(1:nrow(dets_raw)))
+    dplyr::mutate(row_id = seq(1:nrow(dets_raw)))
 
 
   # 2. Down sample to required rate ----
 
   # Calculate frame rate of detections
   dets_fps <- get_detections_fps(dets_raw %>%
-                                   filter(vid_id == "video_1"))
+                                   filter(.data$ID == "video_1"))
 
   hmm.data <- .downsample_to_fps(
     df = dets_raw,
@@ -118,51 +119,49 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
     coordNames = c('xc', 'yc'),
     LLangle = FALSE
   ) %>%
-    dplyr::filter(step != 0)
+    dplyr::filter(.data$step != 0)
 
   # Calculate the mean and standard deviation for step length and turning angle for
   # data above and and below the threshold (1 = under threshold, 2 = over threshold)
 
-  threshold <- threshold
-
   st.mu.1 <- hmm.data %>%
-    filter(step < threshold) %>%
-    pull(step) %>%
+    filter(.data$step < threshold) %>%
+    pull(.data$step) %>%
     mean(na.rm = T)
 
   st.mu.2 <- hmm.data %>%
-    filter(step >= threshold) %>%
-    pull(step) %>%
+    filter(.data$step >= threshold) %>%
+    pull(.data$step) %>%
     mean(na.rm = T)
 
   st.sd.1 <- hmm.data %>%
-    filter(step < threshold) %>%
-    pull(step) %>%
+    filter(.data$step < threshold) %>%
+    pull(.data$step) %>%
     sd(na.rm = T)
 
   st.sd.2 <- hmm.data %>%
-    filter(step >= threshold) %>%
-    pull(step) %>%
+    filter(.data$step >= threshold) %>%
+    pull(.data$step) %>%
     sd(na.rm = T)
 
   an.mu.1 <- hmm.data %>%
-    filter(step < threshold) %>%
-    pull(angle) %>%
+    filter(.data$step < threshold) %>%
+    pull(.data$angle) %>%
     mean(na.rm = T)
 
   an.mu.2 <- hmm.data %>%
-    filter(step >= threshold) %>%
-    pull(angle) %>%
+    filter(.data$step >= threshold) %>%
+    pull(.data$angle) %>%
     mean(na.rm = T)
 
   an.sd.1 <- hmm.data %>%
-    filter(step < threshold) %>%
-    pull(angle) %>%
+    filter(.data$step < threshold) %>%
+    pull(.data$angle) %>%
     sd(na.rm = T)
 
   an.sd.2 <- hmm.data %>%
-    filter(step >= threshold) %>%
-    pull(angle) %>%
+    filter(.data$step >= threshold) %>%
+    pull(.data$angle) %>%
     sd(na.rm = T)
 
   # 4. Fit HMM ----
@@ -183,13 +182,13 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
   # 6. Return dataframe in original format with added states ----
   # Bind states in to full resolution data
   dets_raw <- dets_raw %>%
-    dplyr::left_join(hmm.data %>% select(c("id", state_col)), by = "id") %>%
+    dplyr::left_join(hmm.data %>% select(c("row_id", state_col)), by = "row_id") %>%
     tidyr::fill(all_of(state_col), .direction = "downup") %>%
-    dplyr::select(-id)
+    dplyr::select(-.data$row_id)
 
   # 7. Save updated detection files into the original location ----
   dets_raw <- dets_raw %>%
-    group_by(vid_id) %>%
+    group_by(.data$ID) %>%
     group_split()
 
   plyr::llply(
@@ -197,12 +196,12 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
     .fun = function(d) {
 
       # Get video id and extract savepath from detevctions list
-      id <- d$vid_id[1]
+      id <- d$ID[1]
       sp <- detections[[id]]
 
       # remove video id column from d
       d <- d %>%
-        select(-vid_id)
+        select(-.data$ID)
 
       # Save file into the original location
       write.csv(
@@ -215,7 +214,8 @@ fit_HMM <- function(detections, state_fps = 3, overwrite = F, threshold = 100,
     }
   )
 
-  return(dets_raw)
+  return(list(detection = dets_raw,
+              model = mod))
 }
 
 

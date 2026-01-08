@@ -8,14 +8,13 @@
 detection models to aid large scale behavioural analyses of single
 animals in confined spaces.
 
-*The package is still in development so some features may not work
-correctly. Please report any bugs via email (<ml673@exeter.ac.uk>) or by
+*Please report any bugs via email (<ml673@exeter.ac.uk>) or by
 submitting an issue*
 
 ## Installation
 
-You can install the development version of `AnimalTrackR` like so (you
-will need the devtools package installed):
+You can install the development version of `AnimalTrackR` as follows
+(you will need the devtools package installed):
 
 ``` r
 devtools::install_github("mariolambrette/AnimalTrackR")
@@ -23,16 +22,13 @@ devtools::install_github("mariolambrette/AnimalTrackR")
 library(AnimalTrackR)
 ```
 
-Installation via `install.packages()` is not yet possible, but support
-for this method will be added in due course.
-
 ### Dependencies
 
-`AnimalTrackR` has multiple python dependencies. For the vast majority
-of users the built-in `create_TrackR_env()` function will handle all
-dependencies, however for users where this is not the case see the
-dependences documentation (run `vignette("AnimalTrackR-dependencies")`
-after installing AnimalTrackR)
+`AnimalTrackR` has multiple python dependencies. The
+`create_TrackR_env()` function handles these for normal usage. For users
+who would like ot configure a custom environment, a vignette is provided
+which documents the core dependencies:
+`vignette("AnimalTrackR-dependencies")`
 
 ## Quick start guide
 
@@ -103,7 +99,8 @@ short example videos for display and validation, or in batch on very
 large video datasets to enable subsequent analyses. Model detections can
 be used to run various behavioural analyses. Functionality for fitting
 hidden markov models (HMMs) to detections to classify behaviour into
-active and non active states is included and described [here]().
+active and non active states is included and described
+[here](#hidden-markov-models-for-behavioural-states).
 
 #### File Structure
 

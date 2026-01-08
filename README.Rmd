@@ -18,11 +18,11 @@ knitr::opts_chunk$set(
 
 `AnimalTrackR` provides a simple interface to [YOLO11](https://docs.ultralytics.com/) to allow users to train animal detection models to aid large scale behavioural analyses of single animals in confined spaces.
 
-*The package is still in development so some features may not work correctly. Please report any bugs via email (ml673@exeter.ac.uk) or by submitting an issue*
+*Please report any bugs via email (ml673@exeter.ac.uk) or by submitting an issue*
 
 ## Installation
 
-You can install the development version of `AnimalTrackR` like so (you will need the devtools package installed):
+You can install the development version of `AnimalTrackR` as follows (you will need the devtools package installed):
 
 ``` {r install-package, eval=FALSE, echo = TRUE}
 devtools::install_github("mariolambrette/AnimalTrackR")
@@ -30,11 +30,9 @@ devtools::install_github("mariolambrette/AnimalTrackR")
 library(AnimalTrackR)
 ```
 
-Installation via `install.packages()` is not yet possible, but support for this method will be added in due course.
-
 ### Dependencies
 
-`AnimalTrackR` has multiple python dependencies. For the vast majority of users the built-in `create_TrackR_env()` function will handle all dependencies, however for users where this is not the case see the dependences documentation (run `vignette("AnimalTrackR-dependencies")` after installing AnimalTrackR)
+`AnimalTrackR` has multiple python dependencies. The `create_TrackR_env()` function handles these for normal usage. For users who would like ot configure a custom environment, a vignette is provided which documents the core dependencies: `vignette("AnimalTrackR-dependencies")`
 
 ## Quick start guide
 
@@ -95,7 +93,7 @@ run_model(video = "path/to/video.mp4", model = "example_model")
 
 ### Overview
 
-`AnimalTrackR` provides an end-to-end pipeline for using [YOLO11 detection models](https://docs.ultralytics.com/tasks/detect/) to track an individual animal in captivity for behavioural analyses. Broadly, it allows you to [sample frames](#extracting-training-images) from the total of your experiment's footage which you can [annotate](#image-annotation) and use to [train a YOLO11 detection model](#model-training). You can [run](#model-deployment) the model on short example videos for display and validation, or in batch on very large video datasets to enable subsequent analyses. Model detections can be used to run various behavioural analyses. Functionality for fitting hidden markov models (HMMs) to detections to classify behaviour into active and non active states is included and described [here]().
+`AnimalTrackR` provides an end-to-end pipeline for using [YOLO11 detection models](https://docs.ultralytics.com/tasks/detect/) to track an individual animal in captivity for behavioural analyses. Broadly, it allows you to [sample frames](#extracting-training-images) from the total of your experiment's footage which you can [annotate](#image-annotation) and use to [train a YOLO11 detection model](#model-training). You can [run](#model-deployment) the model on short example videos for display and validation, or in batch on very large video datasets to enable subsequent analyses. Model detections can be used to run various behavioural analyses. Functionality for fitting hidden markov models (HMMs) to detections to classify behaviour into active and non active states is included and described [here](#hidden-markov-models-for-behavioural-states).
 
 
 #### File Structure
