@@ -59,6 +59,9 @@
 #'  See the [opencv-python](https://docs.opencv.org/4.x/) documentation for more
 #'  details on compatibility
 #'
+#' @param seed Optional integer random seed. Supplying a seed makes the
+#'   selection of frames reproducible.
+#'
 #' @param project The TrackR project to uses. By default the current active project
 #'   (retrieved with `get_Project()`) is used. This will be the correct behaviour
 #'   in the vast majority of cases so most users can ignore this parameter.
@@ -85,7 +88,8 @@
 #'    Group1 = 0.3,
 #'    Group2 = 0.7
 #'  ),
-#'  nimgs = 1600
+#'  nimgs = 1600,
+#'  seed = 1
 #' )
 #' }
 extract_images <-
@@ -93,6 +97,7 @@ extract_images <-
            group_weights = NULL,
            nimgs = 1600, # ~ 1000 training images, 300 testing 300 validation
            vid_ext = NULL,
+           seed = NULL,
            project = get_Project()){
 
 
@@ -140,7 +145,8 @@ extract_images <-
       weights = reticulate::r_to_py(group_weights),
       n = reticulate::r_to_py(as.integer(nimgs)),
       path = reticulate::r_to_py(file.path(project, "ToAnnotate")),
-      vid_ext = reticulate::r_to_py(vid_ext)
+      vid_ext = reticulate::r_to_py(vid_ext),
+      seed = reticulate::r_to_py(if (is.null(seed)) NULL else as.integer(seed))
     )
 
     invisible(T)

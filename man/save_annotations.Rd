@@ -4,10 +4,30 @@
 \alias{save_annotations}
 \title{Save annotations into project directory}
 \usage{
-save_annotations(csv)
+save_annotations(
+  csv,
+  split_by = c("video", "image"),
+  split = c(Train = 0.6, Val = 0.2, Test = 0.2),
+  group_pattern = NULL,
+  seed = NULL
+)
 }
 \arguments{
 \item{csv}{path to the csv file exported from \href{https://www.makesense.ai/}{Make Sense}.}
+
+\item{split_by}{Either \code{"video"} (default) or \code{"image"}. See Details.}
+
+\item{split}{Named numeric vector giving the target proportion of images in
+the \code{Train}, \code{Val} and \code{Test} sets. Must sum to 1.}
+
+\item{group_pattern}{Optional. A regular expression that picks out the part
+of each file name identifying its video, individual or tank, e.g.
+\code{"^ZF[0-9]+"} to group \code{ZF15_pre_000123.jpg} by fish (\code{ZF15}). Not needed
+for images extracted with \code{\link[=extract_images]{extract_images()}}. Only used when
+\code{split_by = "video"}. See "Choosing a \code{group_pattern}" in Details for
+more examples and how to check a pattern.}
+
+\item{seed}{Optional integer random seed, for a reproducible split.}
 }
 \value{
 invisibly return TRUE
@@ -22,11 +42,75 @@ As well as saving the completed annotations the function will remove annotated
 images from the 'ToAnnotate' folder, ensuring that users do not annotate the
 same image twice if they are completing annotations over multiple sessions.
 }
+\details{
+\strong{Splitting into training, validation and test sets}
+
+By default (\code{split_by = "video"}) images are allocated to the training,
+validation and test sets by \emph{source video}, so that all frames from a given
+video end up in the same set. Frames from the same video are often very
+similar, so allowing them into both the training and test sets (a random
+frame-level split) tends to give over-optimistic performance estimates.
+
+The source video is read from the file name written by \code{\link[=extract_images]{extract_images()}}
+(\verb{\{group\}_\{video\}_\{frame\}.jpg}), so images extracted with AnimalTrackR need
+no extra input. For images named in some other way, use \code{group_pattern}
+(see below). Images whose source cannot be identified are allocated
+individually, with a message saying how many.
+
+\strong{Choosing a \code{group_pattern}}
+
+\code{group_pattern} tells AnimalTrackR which part of each file name identifies
+the video, individual or tank an image came from. It is a
+\link[base:regex]{regular expression}: images whose file names give the same
+match are kept together. The match is made against the file name without
+its extension (e.g. \code{ZF15_pre_000123} for \code{ZF15_pre_000123.jpg}).
+
+A few building blocks cover most cases:
+\itemize{
+\item \code{^} means "start of the file name"
+\item \verb{[0-9]+} means "one or more digits"
+\item \verb{[A-Za-z]+} means "one or more letters"
+\item any other letters, numbers, \verb{_} and \code{-} match themselves
+}
+
+Examples:\tabular{llll}{
+   File names \tab To group by \tab \code{group_pattern} \tab Gives \cr
+   \code{ZF15_pre_000123.jpg}, \code{ZF15_1h_004410.jpg} \tab fish \tab \code{"^ZF[0-9]+"} \tab \code{ZF15} \cr
+   \code{ZF15_pre_000123.jpg}, \code{ZF15_1h_004410.jpg} \tab video (fish and timepoint) \tab \code{"^ZF[0-9]+_[A-Za-z0-9]+"} \tab \code{ZF15_pre}, \code{ZF15_1h} \cr
+   \verb{tank03_2024-05-01_0153.jpg} \tab tank \tab \code{"^tank[0-9]+"} \tab \code{tank03} \cr
+   \verb{01_B1-02-2023-11-02-151006.mp4_0010000.jpg} \tab tank \tab \code{"^[0-9]+_B1-[0-9]+"} \tab \verb{01_B1-02} \cr
+}
+
+
+Where the same animal appears in several videos, grouping by individual is
+stricter than grouping by video, and gives a fairer test of how the model
+will perform on new animals.
+
+To check a pattern before using it, run it on a few of your file names:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{files <- list.files("path/to/images")
+unique(regmatches(files, regexpr("^ZF[0-9]+", files)))
+}\if{html}{\out{</div>}}
+
+This should list one entry per video or individual. The message printed by
+\code{save_annotations()} / \code{import_annotations()} also reports how many groups
+were found and how many images could not be matched.
+
+Videos that already have images in the project (from earlier annotation
+sessions) keep their existing allocation, so a video never spans sets.
+New videos are shuffled and allocated so that the proportion of \emph{images} in
+each set is as close as possible to \code{split}. With few videos the realised
+proportions can differ noticeably from \code{split}; the realised numbers are
+reported in a message.
+
+\code{split_by = "image"} reproduces the original behaviour of allocating each
+image independently, which is not recommended for model evaluation.
+}
 \examples{
 \dontrun{
 # After creating annotations in Make Sense, exporting them to a csv file and
 # saving that file to "some/path/annotations.csv":
-save_annotations(csv = "some/path/annotation.csv")
+save_annotations(csv = "some/path/annotation.csv", seed = 1)
 }
 
 }

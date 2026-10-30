@@ -6,8 +6,12 @@ def TestingPython():
   return(True)
 
 
-def extract(vids, weights, n, path, vid_ext):
-    
+def extract(vids, weights, n, path, vid_ext, seed=None):
+
+    # Local random number generator so that extraction is reproducible when a
+    # seed is supplied
+    rng = random.Random(seed)
+
     # supported extensions
     exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.mts']
 
@@ -68,7 +72,7 @@ def extract(vids, weights, n, path, vid_ext):
                     frames.extend([(idx, frame) for frame in range(1, nframes + 1)])
 
                 # Random sample of frames to extract
-                select = random.sample(frames, vid_imgs)
+                select = rng.sample(frames, vid_imgs)
 
                 # Iterate over unique video id's in selected frames to extract selected frames
                 for id in set(idx for idx, _ in select):
@@ -90,7 +94,10 @@ def extract(vids, weights, n, path, vid_ext):
                             print(f"Error: Could not read frame {num}.")
                             continue
 
-                        savepath = os.path.join(path, f"{gr}_{id}_{num}.jpg")
+                        # Name as {group}_{video}c{chapter}_{frame} so the
+                        # source video can be recovered and frames from
+                        # different videos cannot overwrite each other
+                        savepath = os.path.join(path, f"{gr}_{vid_id}c{id}_{num}.jpg")
                         cv.imwrite(savepath, frame)
                         exported += 1
 
@@ -112,7 +119,7 @@ def extract(vids, weights, n, path, vid_ext):
                 frames = int(cap.get(cv.CAP_PROP_FRAME_COUNT))
 
                 # Random sample
-                select = random.sample(range(0, frames), vid_imgs)
+                select = rng.sample(range(0, frames), vid_imgs)
 
                 for num in select:
                     # Navigate to frame

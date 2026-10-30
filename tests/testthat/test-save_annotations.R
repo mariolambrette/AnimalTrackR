@@ -365,3 +365,195 @@ test_that(".save_image creates files in correct locations", {
   # Check original was removed
   expect_false(file.exists(img_path))
 })
+
+
+# ---- Grouped (by-video) splitting ------------------------------------------
+
+# Helper: write a MakeSense-style CSV for a set of image names and create the
+# matching dummy images in ToAnnotate
+.make_session <- function(proj, image_names) {
+  for (name in image_names) writeLines("dummy", file.path(proj, "ToAnnotate", name))
+  csv_path <- tempfile(fileext = ".csv")
+  n <- length(image_names)
+  write.csv(data.frame(
+    label_name = rep("Target", n), bbox_x = 100, bbox_y = 100,
+    bbox_width = 50, bbox_height = 50, image_width = 640, image_height = 480,
+    image_name = image_names
+  ), csv_path, row.names = FALSE)
+  csv_path
+}
+
+# Helper: which set each image ended up in
+.allocated_sets <- function(proj) {
+  do.call(rbind, lapply(c("Train", "Val", "Test"), function(s) {
+    f <- list.files(file.path(proj, "YOLO", s, "images"))
+    if (length(f) == 0) return(NULL)
+    data.frame(image_name = f, set = s)
+  }))
+}
+
+test_that(".image_groups parses extract_images() file names", {
+  nm <- c("Group1_3_1200.jpg", "Treatment_A_12_55.jpg", "G2_4c1_900.jpg",
+          "G2_4c2_10.jpg", "img1.jpg")
+  expect_equal(
+    AnimalTrackR:::.image_groups(nm),
+    c("Group1_3", "Treatment_A_12", "G2_4", "G2_4", NA)
+  )
+})
+
+test_that(".image_groups uses group_pattern when supplied", {
+  nm <- c("01_B1-02-2023-11-02-151006-154006.mp4_0010000.jpg",
+          "01_B1-13-2023-11-03-071002-074002.mp4_0000000.jpg")
+  expect_equal(
+    AnimalTrackR:::.image_groups(nm, "^[0-9]+_B1-[0-9]+"),
+    c("01_B1-02", "01_B1-13")
+  )
+})
+
+test_that("save_annotations keeps all frames from a video in one set", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  imgs <- as.vector(outer(0:9, 1:12, function(v, f) paste0("Group1_", v, "_", f * 100, ".jpg")))
+  csv_path <- .make_session(temp_proj, imgs)
+  suppressMessages(save_annotations(csv_path, seed = 1))
+
+  out <- .allocated_sets(temp_proj)
+  out$group <- AnimalTrackR:::.image_groups(out$image_name)
+  expect_equal(nrow(out), length(imgs))
+  expect_true(all(tapply(out$set, out$group, function(x) length(unique(x))) == 1))
+  expect_setequal(unique(out$set), c("Train", "Val", "Test"))
+  # 10 equal-sized videos with a 60/20/20 split -> 6/2/2 videos
+  expect_equal(as.vector(table(factor(out$set, c("Train", "Val", "Test")))), c(72, 24, 24))
+  unlink(csv_path)
+})
+
+test_that("videos keep their set across annotation sessions", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  s1 <- as.vector(outer(0:9, 1:5, function(v, f) paste0("Group1_", v, "_", f, ".jpg")))
+  s2 <- as.vector(outer(0:9, 6:10, function(v, f) paste0("Group1_", v, "_", f, ".jpg")))
+  csv1 <- .make_session(temp_proj, s1)
+  suppressMessages(save_annotations(csv1, seed = 1))
+  csv2 <- .make_session(temp_proj, s2)
+  suppressMessages(save_annotations(csv2, seed = 99))
+
+  out <- .allocated_sets(temp_proj)
+  out$group <- AnimalTrackR:::.image_groups(out$image_name)
+  expect_equal(nrow(out), 100)
+  expect_true(all(tapply(out$set, out$group, function(x) length(unique(x))) == 1))
+  unlink(c(csv1, csv2))
+})
+
+test_that("the same seed gives the same split", {
+  imgs <- as.vector(outer(0:19, 1:5, function(v, f) paste0("Group1_", v, "_", f, ".jpg")))
+  run <- function(seed) {
+    temp_proj <- create_temp_project()
+    on.exit(cleanup_temp_project(temp_proj))
+    set_Project(temp_proj)
+    csv <- .make_session(temp_proj, imgs)
+    suppressMessages(save_annotations(csv, seed = seed))
+    out <- .allocated_sets(temp_proj)
+    out[order(out$image_name), ]
+  }
+  expect_identical(run(42), run(42))
+})
+
+test_that("setting a seed does not change the user's random number stream", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  set.seed(123); expected <- runif(1)
+  set.seed(123)
+  suppressMessages(AnimalTrackR:::.assign_sets(
+    paste0("Group1_", 0:9, "_1.jpg"), "video",
+    c(Train = 0.6, Val = 0.2, Test = 0.2), seed = 5, project = temp_proj
+  ))
+  expect_equal(runif(1), expected)
+})
+
+test_that("split_by = 'image' still allocates images individually", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  imgs <- paste0("Group1_0_", 1:60, ".jpg")
+  csv_path <- .make_session(temp_proj, imgs)
+  suppressMessages(save_annotations(csv_path, split_by = "image", seed = 1))
+  out <- .allocated_sets(temp_proj)
+  # One video, but images spread across sets
+  expect_gt(length(unique(out$set)), 1)
+  unlink(csv_path)
+})
+
+test_that("invalid split specifications are rejected", {
+  expect_error(AnimalTrackR:::.check_split(c(Train = 0.5, Val = 0.2, Test = 0.2)), "sum to 1")
+  expect_error(AnimalTrackR:::.check_split(c(0.6, 0.2, 0.2)), "named numeric")
+})
+
+
+# ---- import_annotations ---------------------------------------------------
+
+test_that("import_annotations copies YOLO data and groups by pattern", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  src <- tempfile("yolo_src_")
+  dir.create(file.path(src, "images"), recursive = TRUE)
+  dir.create(file.path(src, "labels"))
+  tanks <- sprintf("01_B1-%02d", 2:13)
+  imgs <- as.vector(outer(tanks, 1:4, function(t, f) paste0(t, "-2023-11-02.mp4_", sprintf("%07d", f), ".jpg")))
+  for (i in imgs) {
+    writeLines("dummy", file.path(src, "images", i))
+    writeLines(c("0 0.5 0.5 0.1 0.1", "1 0.9 0.9 0.1 0.1"),
+               file.path(src, "labels", sub("\\.jpg$", ".txt", i)))
+  }
+  # One image with no label
+  writeLines("dummy", file.path(src, "images", "01_B1-02-unlabelled.mp4_0000099.jpg"))
+
+  expect_message(
+    sets <- import_annotations(file.path(src, "images"), file.path(src, "labels"),
+                               group_pattern = "^[0-9]+_B1-[0-9]+", seed = 1),
+    "no matching label"
+  )
+
+  out <- .allocated_sets(temp_proj)
+  out$group <- substr(out$image_name, 1, 8)
+  expect_equal(nrow(out), length(imgs))
+  expect_true(all(tapply(out$set, out$group, function(x) length(unique(x))) == 1))
+  # Originals untouched
+  expect_true(all(file.exists(file.path(src, "images", imgs))))
+
+  # Labels copied unchanged
+  lab <- readLines(file.path(temp_proj, "YOLO", out$set[1], "labels",
+                             sub("\\.jpg$", ".txt", out$image_name[1])))
+  expect_equal(lab, c("0 0.5 0.5 0.1 0.1", "1 0.9 0.9 0.1 0.1"))
+  unlink(src, recursive = TRUE)
+})
+
+test_that("import_annotations remaps classes with class_map", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  src <- tempfile("yolo_src_")
+  dir.create(file.path(src, "images"), recursive = TRUE)
+  dir.create(file.path(src, "labels"))
+  writeLines("dummy", file.path(src, "images", "Group1_0_1.jpg"))
+  writeLines(c("3 0.5 0.5 0.1 0.1", "7 0.2 0.2 0.1 0.1"),
+             file.path(src, "labels", "Group1_0_1.txt"))
+
+  suppressMessages(import_annotations(
+    file.path(src, "images"), file.path(src, "labels"),
+    class_map = c("3" = 0), seed = 1
+  ))
+  out <- .allocated_sets(temp_proj)
+  lab <- readLines(file.path(temp_proj, "YOLO", out$set[1], "labels", "Group1_0_1.txt"))
+  expect_equal(lab, "0 0.5 0.5 0.1 0.1")
+  unlink(src, recursive = TRUE)
+})
