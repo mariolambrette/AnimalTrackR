@@ -33,6 +33,13 @@
 #' @param model (optional) Name of the TrackR model to use for detections, or a full path to yolov8-11 model weights. NULL, the default, uses the best weights from the first model in the YOLO/models/ directory
 #' @param savepath Path to a directory into which to save the video detections. NULL, the default, saves the video into the 'Demos' directory of the active TrackR project.
 #' @param gopro T/F. The default is FALSE but this must be set to TRUE if footage was recorded on a gopro. See details for more information.
+#' @param conf Confidence threshold, between 0 and 1. The model gives every
+#'   detection a confidence score, and detections below this threshold are
+#'   ignored. Higher values mean fewer false detections but more frames where
+#'   the animal is missed; lower values the reverse. The default (0.75) works
+#'   well in most cases. To choose a value for your model, see the summary
+#'   figure and `threshold_sweep.csv` produced by [train_Model()] (and
+#'   [evaluate_Model()]).
 #'
 #' @return invisibly returns TRUE upon completion
 #' @export
@@ -45,11 +52,14 @@
 #' @importFrom tools file_ext file_path_sans_ext
 #' @import reticulate
 
-demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
+demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE,
+                     conf = 0.75){
   # Check for an active project
   if (is.null(get_Project())) {
     stop("No active TrackR project found.\n  Set an active project with `set_Project()` then try again.")
   }
+
+  .check_conf(conf)
 
   if (!file.exists(video)) {
     stop("`video` path not found. \n  Check the specified video path is correct and try again.")
@@ -127,7 +137,8 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
     weights = reticulate::r_to_py(weights),
     video   = reticulate::r_to_py(video),
     project = reticulate::r_to_py(project),
-    name    = reticulate::r_to_py(name)
+    name    = reticulate::r_to_py(name),
+    conf    = reticulate::r_to_py(conf)
   )
 
   invisible(T)
@@ -144,8 +155,20 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #' @param save_vid Boolean. Defaults to `FALSE`, if set to `TRUE` a copy of the video is saved with predicted bounding boxes plotted onto it. This is useful for validation purposes though for long videos can significantly increase processing times. We recommend using [`demo_run()`] for this type of validation.
 #' @param save_path The path at which to save the video with overlaid detections. Only used if `save_vid` is `TRUE`.
 #' @param gopro T/F. The default is FALSE but this must be set to TRUE if footage was recorded on a gopro. See details for more information.
+#' @param conf Confidence threshold, between 0 and 1. The model gives every
+#'   detection a confidence score, and detections below this threshold are
+#'   ignored. Higher values mean fewer false detections but more frames where
+#'   the animal is missed; lower values the reverse. The default (0.75) works
+#'   well in most cases. To choose a value for your model, see the summary
+#'   figure and `threshold_sweep.csv` produced by [train_Model()] (and
+#'   [evaluate_Model()]).
 #'
 #' @details
+#' **What is recorded:** in each frame analysed, the single most confident
+#' detection of your target animal is recorded, provided its confidence is at
+#' least `conf`. Detections of neighbouring animals (the `ZZZ` class) are
+#' ignored.
+#'
 #' **`model` details:** In principle, any YOLOv8-v11 model weights can be used here.
 #' For most users, providing the model name specified in [`train_Model()`] will
 #' be the right thing to do here. However, users wishing to experiment with
@@ -174,7 +197,10 @@ demo_run <- function(video, model = NULL, savepath = NULL, gopro = FALSE){
 #'
 #' @examples
 #' \dontrun{
-#' run_model(video = "path/to/video.mp4")
+#' run_Model(video = "path/to/video.mp4")
+#'
+#' # Use a lower confidence threshold
+#' run_Model(video = "path/to/video.mp4", conf = 0.5)
 #' }
 #'
 #' @importFrom tools file_ext file_path_sans_ext
@@ -190,12 +216,15 @@ run_Model <- function(
     model = NULL,
     save_vid = F,
     save_path = NULL,
-    gopro = FALSE) {
+    gopro = FALSE,
+    conf = 0.75) {
 
   # Check for an active project
   if (is.null(get_Project())) {
     stop("No active TrackR project found.\n  Set an active project with `set_Project()` then try again.")
   }
+
+  .check_conf(conf)
 
   ## Handle the video file path ----
   # Check video exists
@@ -331,7 +360,8 @@ run_Model <- function(
           vid        = reticulate::r_to_py(v),
           weights    = reticulate::r_to_py(weights),
           detections = reticulate::r_to_py(detections_path),
-          detect_fps = reticulate::r_to_py(detect_fps)
+          detect_fps = reticulate::r_to_py(detect_fps),
+          conf       = reticulate::r_to_py(conf)
         )
       }
     )
@@ -441,4 +471,15 @@ run_Model <- function(
   }
 
   return(reformatted)
+}
+
+
+
+#' INTERNAL Check a confidence threshold
+#' @noRd
+.check_conf <- function(conf) {
+  if (!is.numeric(conf) || length(conf) != 1 || is.na(conf) || conf <= 0 || conf >= 1) {
+    stop("`conf` must be a single number between 0 and 1.")
+  }
+  invisible(TRUE)
 }

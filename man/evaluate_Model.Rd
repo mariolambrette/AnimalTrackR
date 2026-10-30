@@ -20,7 +20,8 @@ evaluate_Model(
 \code{\link[=train_Model]{train_Model()}}.}
 
 \item{conf}{Confidence threshold that will be used when tracking with
-\code{\link[=run_Model]{run_Model()}}. Detections with lower confidence are ignored. Default 0.75.}
+\code{\link[=run_Model]{run_Model()}} (its \code{conf} argument). Detections with lower confidence are
+ignored. Default 0.75.}
 
 \item{group_pattern}{Optional. Identifies which video each test image came
 from, for the per-video results and confidence intervals. Not needed for

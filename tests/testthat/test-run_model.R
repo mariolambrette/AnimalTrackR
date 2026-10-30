@@ -344,3 +344,15 @@ test_that("detections_path construction", {
   expect_true(grepl("Detections", expected_path))
   expect_true(grepl("\\.csv$", expected_path))
 })
+
+
+test_that("run_Model and demo_run reject invalid confidence thresholds", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  for (bad in list(0, 1, -0.2, 1.5, c(0.5, 0.6), "0.5", NA_real_)) {
+    expect_error(run_Model("video.mp4", conf = bad), "between 0 and 1")
+    expect_error(demo_run("video.mp4", conf = bad), "between 0 and 1")
+  }
+})

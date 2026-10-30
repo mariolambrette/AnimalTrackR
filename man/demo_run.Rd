@@ -4,7 +4,7 @@
 \alias{demo_run}
 \title{Run an AnimalTrackR detection model in demo mode}
 \usage{
-demo_run(video, model = NULL, savepath = NULL, gopro = FALSE)
+demo_run(video, model = NULL, savepath = NULL, gopro = FALSE, conf = 0.75)
 }
 \arguments{
 \item{video}{Path to video clip to use for detections}
@@ -14,6 +14,14 @@ demo_run(video, model = NULL, savepath = NULL, gopro = FALSE)
 \item{savepath}{Path to a directory into which to save the video detections. NULL, the default, saves the video into the 'Demos' directory of the active TrackR project.}
 
 \item{gopro}{T/F. The default is FALSE but this must be set to TRUE if footage was recorded on a gopro. See details for more information.}
+
+\item{conf}{Confidence threshold, between 0 and 1. The model gives every
+detection a confidence score, and detections below this threshold are
+ignored. Higher values mean fewer false detections but more frames where
+the animal is missed; lower values the reverse. The default (0.75) works
+well in most cases. To choose a value for your model, see the summary
+figure and \code{threshold_sweep.csv} produced by \code{\link[=train_Model]{train_Model()}} (and
+\code{\link[=evaluate_Model]{evaluate_Model()}}).}
 }
 \value{
 invisibly returns TRUE upon completion

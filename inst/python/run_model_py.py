@@ -9,7 +9,7 @@ def check_cuda():
   return cuda.is_available()
 
 # Function for running model on single video
-def run_model(vid, weights, detections, detect_fps=None):
+def run_model(vid, weights, detections, detect_fps=None, conf=0.75):
     
     """
     Runs YOLO detection model on video data and records detection in AnimalTrackR format csv file.
@@ -18,6 +18,8 @@ def run_model(vid, weights, detections, detect_fps=None):
     vid (str): Path to the input video file.
     weights (str): Path to YOLO model weights.
     detections (str): Path to output AnimalTrackR detection file
+    detect_fps (int): Frame rate at which to run detections (None = every frame)
+    conf (float): Minimum confidence for a detection to be recorded
     """
     
     # Load model
@@ -63,7 +65,7 @@ def run_model(vid, weights, detections, detect_fps=None):
       
       if frame_count % frame_skip == 0:
         # Process frame by running inference and updating csv file
-        res = model.predict(frame, save=False, conf=0.75, classes=[0], save_txt=False, stream=True, max_det=1)
+        res = model.predict(frame, save=False, conf=conf, classes=[0], save_txt=False, stream=True, max_det=1)
         
         # Extract box coordinates
         for r in res:
@@ -107,7 +109,7 @@ def run_model(vid, weights, detections, detect_fps=None):
     csv_file.close()
     
 # Function for running model in demo mode
-def demo_run(weights, video, project, name):
+def demo_run(weights, video, project, name, conf=0.75):
 
     # Load model
     model = YOLO(weights)
@@ -148,7 +150,7 @@ def demo_run(weights, video, project, name):
             break
         
         # Process frame by running inference
-        res = model.predict(frame, save=False, conf=0.75, classes=[0], save_txt=False, stream=True, max_det=1)
+        res = model.predict(frame, save=False, conf=conf, classes=[0], save_txt=False, stream=True, max_det=1)
         
         # Extract box coordinates
         coords = None

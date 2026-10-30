@@ -120,7 +120,8 @@
 #' @param model_name Name of the model to evaluate, as given to
 #'   [train_Model()].
 #' @param conf Confidence threshold that will be used when tracking with
-#'   [run_Model()]. Detections with lower confidence are ignored. Default 0.75.
+#'   [run_Model()] (its `conf` argument). Detections with lower confidence are
+#'   ignored. Default 0.75.
 #' @param group_pattern Optional. Identifies which video each test image came
 #'   from, for the per-video results and confidence intervals. Not needed for
 #'   images extracted with [extract_images()]. See "Choosing a `group_pattern`"
@@ -162,9 +163,7 @@ evaluate_Model <- function(model_name,
   if (is.null(project)) {
     stop("No active TrackR project. Activate a project using `set_Project()`.")
   }
-  if (!is.numeric(conf) || length(conf) != 1 || conf <= 0 || conf >= 1) {
-    stop("`conf` must be a single number between 0 and 1.")
-  }
+  .check_conf(conf)
 
   model_dir <- file.path(project, "YOLO", "models", model_name)
   weights <- file.path(model_dir, "weights", "best.pt")

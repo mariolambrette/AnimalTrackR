@@ -11,7 +11,8 @@ run_Model(
   model = NULL,
   save_vid = F,
   save_path = NULL,
-  gopro = FALSE
+  gopro = FALSE,
+  conf = 0.75
 )
 }
 \arguments{
@@ -28,6 +29,14 @@ run_Model(
 \item{save_path}{The path at which to save the video with overlaid detections. Only used if \code{save_vid} is \code{TRUE}.}
 
 \item{gopro}{T/F. The default is FALSE but this must be set to TRUE if footage was recorded on a gopro. See details for more information.}
+
+\item{conf}{Confidence threshold, between 0 and 1. The model gives every
+detection a confidence score, and detections below this threshold are
+ignored. Higher values mean fewer false detections but more frames where
+the animal is missed; lower values the reverse. The default (0.75) works
+well in most cases. To choose a value for your model, see the summary
+figure and \code{threshold_sweep.csv} produced by \code{\link[=train_Model]{train_Model()}} (and
+\code{\link[=evaluate_Model]{evaluate_Model()}}).}
 }
 \value{
 Returns the filepath to the detections file
@@ -36,6 +45,11 @@ Returns the filepath to the detections file
 Run AnimalTrackR detection model
 }
 \details{
+\strong{What is recorded:} in each frame analysed, the single most confident
+detection of your target animal is recorded, provided its confidence is at
+least \code{conf}. Detections of neighbouring animals (the \code{ZZZ} class) are
+ignored.
+
 \strong{\code{model} details:} In principle, any YOLOv8-v11 model weights can be used here.
 For most users, providing the model name specified in \code{\link[=train_Model]{train_Model()}} will
 be the right thing to do here. However, users wishing to experiment with
@@ -62,7 +76,10 @@ This is a free video processing library that can be installed \href{https://ffmp
 }
 \examples{
 \dontrun{
-run_model(video = "path/to/video.mp4")
+run_Model(video = "path/to/video.mp4")
+
+# Use a lower confidence threshold
+run_Model(video = "path/to/video.mp4", conf = 0.5)
 }
 
 }
