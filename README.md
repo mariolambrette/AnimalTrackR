@@ -546,14 +546,9 @@ using the `train_Model()` function:
 train_Model("Model-Name")
 ```
 
-This will launch YOLO11 model training. You can see more details on
-modifying training parameters in the `train_Model()` function
-documentation. Once training has completed, the training results will be
-saved in the ‘YOLO/models/Model-Name’ directory of the active project.
-You can view the automatically generated plots in that folder to get an
-understanding of the performance of the model. Ideally, you will see
-values very close to 1 for all important metrics (F1, precision, recall
-and mAP). Once this is the case you can proceed to deploying your model.
+This will launch YOLO11 model training. You can see more details on modifying training parameters in the `train_Model()` function documentation. Once training has completed, the training results and model weights will be saved in the 'YOLO/models/Model-Name' directory of the active project.
+
+`train_Model()` then automatically tests the model on the images in the test set, which are not used at any point during training, prints a summary and saves the full results to 'YOLO/models/Model-Name/evaluation'. These include standard detection metrics (precision, recall, F1 and mAP), metrics that reflect how `run_Model()` will use the model (with confidence intervals and the accuracy of the predicted position), results for each video, image-by-image results for finding errors, and a record of the training settings, hardware and software used. See `?evaluate_Model` for a full description of each file. Ideally, you will see values very close to 1 for the important metrics (F1, precision, recall and mAP). Once this is the case you can proceed to deploying your model.
 
 If model performance is poor you can consider a few options. The first
 is to add to the set of training images. Simply go back to the image

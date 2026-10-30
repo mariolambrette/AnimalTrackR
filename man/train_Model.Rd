@@ -8,7 +8,10 @@ train_Model(
   model_name,
   project = get_Project(),
   config = NULL,
-  target_only = FALSE
+  target_only = FALSE,
+  evaluate = TRUE,
+  conf = 0.75,
+  group_pattern = NULL
 )
 }
 \arguments{
@@ -28,10 +31,22 @@ contains non-target but visually similar objects. There may be cases where
 including these in model training actually hampers performance (e.g. where
 there are not very many of these objects). This parameters allows those
 annotations to be excluded from model training.}
+
+\item{evaluate}{Logical. Should the trained model be evaluated on the test
+set once training is complete? Default \code{TRUE}.}
+
+\item{conf}{Confidence threshold that will be used when deploying the model
+with \code{\link[=run_Model]{run_Model()}}, used in the evaluation. Default 0.75.}
+
+\item{group_pattern}{Optional regular expression identifying the video (or
+other group) each image came from, used in the evaluation. Not needed for
+images extracted with \code{\link[=extract_images]{extract_images()}}. See "Choosing a \code{group_pattern}"
+in \code{\link[=save_annotations]{save_annotations()}}.}
 }
 \value{
-invisibly returns TRUE when training is complete. The model training
-results will be available to view at 'YOLO/model/\{model_name\}'
+Invisibly, the evaluation results (see \code{\link[=evaluate_Model]{evaluate_Model()}}), or \code{TRUE}
+if \code{evaluate = FALSE}. Training outputs, including the model weights, are
+saved to 'YOLO/models/\{model_name\}'.
 }
 \description{
 This function takes the annotated data in a TrackR project directory and uses
@@ -40,8 +55,10 @@ and used to track animals in a broader dataset.
 }
 \details{
 The base weights used for training are the default \href{https://docs.ultralytics.com/models/yolo11/#supported-tasks-and-modes}{YOLO11s detection weights}.
-Training is configured to run for 200 epochs, with an image size of 640 and a
-batch size of 16. In almost all cases users will not need to worry about
+Training is configured to run for up to 200 epochs, with an image size of 640
+and a batch size of 16. Training stops early if performance on the
+validation set has not improved for 50 epochs, and the weights from the
+best-performing epoch are kept. In almost all cases users will not need to worry about
 these parameters, with sufficient training data they should enable up to 100\%
 accurate detection models to be trained.
 
@@ -53,6 +70,14 @@ already specified hyperparameters or add any other hyperparameters they wish.
 This should be done with caution as it could significantly harm training
 results but may be essential in some cases. For a full description of
 possible hyperparameters see the \href{https://docs.ultralytics.com/modes/train/#train-settings}{ultralytics documentation}
+
+Once training is complete the model is automatically tested on the images
+in the project's test set, which are not used at any point during training,
+and the results are saved alongside the model weights in
+'YOLO/models/\{model_name\}/evaluation'. These include standard detection
+metrics, metrics that reflect how \code{\link[=run_Model]{run_Model()}} will use the model, a record
+of the training settings and time, and the hardware and software used. See
+\code{\link[=evaluate_Model]{evaluate_Model()}} for full details.
 }
 \examples{
 \dontrun{
@@ -64,7 +89,8 @@ set_Project("path/to/TackR_project")
 # Train model on annotations
 train_Model("model1")
 
-# Training results will be available in the 'YOLO/model/model1' directory
+# Training results will be available in the 'YOLO/models/model1' directory
+# and test-set evaluation results in 'YOLO/models/model1/evaluation'
 }
 
 }

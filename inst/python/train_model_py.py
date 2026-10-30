@@ -13,7 +13,8 @@ def train_model(config_file, project_dir, model_name, gpu, param_file, t_only):
   :param model_name: The name under which to save the model
   :param gpu: Boolean indicating whether training should be conducted using a GPU (boolean created in R using check_gpu())
   :param param_file: Path to a training hyperparameter configuration file
-  :return: XXX
+  :return: path to the directory the training run was saved in (Ultralytics
+      adds a number to model_name if a model of that name already exists)
   """
   
   wd = os.getcwd()
@@ -69,3 +70,5 @@ def train_model(config_file, project_dir, model_name, gpu, param_file, t_only):
           yaml.safe_dump(config, file, default_flow_style=False)
   
   os.chdir(wd)
+
+  return str(model.trainer.save_dir)

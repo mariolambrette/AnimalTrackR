@@ -7,8 +7,10 @@
 #'
 #' @details
 #' The base weights used for training are the default [YOLO11s detection weights](https://docs.ultralytics.com/models/yolo11/#supported-tasks-and-modes).
-#' Training is configured to run for 200 epochs, with an image size of 640 and a
-#' batch size of 16. In almost all cases users will not need to worry about
+#' Training is configured to run for up to 200 epochs, with an image size of 640
+#' and a batch size of 16. Training stops early if performance on the
+#' validation set has not improved for 50 epochs, and the weights from the
+#' best-performing epoch are kept. In almost all cases users will not need to worry about
 #' these parameters, with sufficient training data they should enable up to 100%
 #' accurate detection models to be trained.
 #'
@@ -20,6 +22,14 @@
 #' This should be done with caution as it could significantly harm training
 #' results but may be essential in some cases. For a full description of
 #' possible hyperparameters see the [ultralytics documentation](https://docs.ultralytics.com/modes/train/#train-settings)
+#'
+#' Once training is complete the model is automatically tested on the images
+#' in the project's test set, which are not used at any point during training,
+#' and the results are saved alongside the model weights in
+#' 'YOLO/models/\{model_name\}/evaluation'. These include standard detection
+#' metrics, metrics that reflect how [run_Model()] will use the model, a record
+#' of the training settings and time, and the hardware and software used. See
+#' [evaluate_Model()] for full details.
 #'
 #' @param model_name Character string indicating the name of the model to train
 #'  (used to distinguish between multiple iterations during development)
@@ -35,8 +45,18 @@
 #'  there are not very many of these objects). This parameters allows those
 #'  annotations to be excluded from model training.
 #'
-#' @return invisibly returns TRUE when training is complete. The model training
-#'  results will be available to view at 'YOLO/model/\{model_name\}'
+#' @param evaluate Logical. Should the trained model be evaluated on the test
+#'  set once training is complete? Default `TRUE`.
+#' @param conf Confidence threshold that will be used when deploying the model
+#'  with [run_Model()], used in the evaluation. Default 0.75.
+#' @param group_pattern Optional regular expression identifying the video (or
+#'  other group) each image came from, used in the evaluation. Not needed for
+#'  images extracted with [extract_images()]. See "Choosing a `group_pattern`"
+#'  in [save_annotations()].
+#'
+#' @return Invisibly, the evaluation results (see [evaluate_Model()]), or `TRUE`
+#'  if `evaluate = FALSE`. Training outputs, including the model weights, are
+#'  saved to 'YOLO/models/\{model_name\}'.
 #'
 #' @export
 #'
@@ -50,7 +70,8 @@
 #' # Train model on annotations
 #' train_Model("model1")
 #'
-#' # Training results will be available in the 'YOLO/model/model1' directory
+#' # Training results will be available in the 'YOLO/models/model1' directory
+#' # and test-set evaluation results in 'YOLO/models/model1/evaluation'
 #' }
 #'
 #' @import reticulate
@@ -58,7 +79,8 @@
 #'
 
 train_Model <- function(model_name, project = get_Project(), config = NULL,
-                        target_only = FALSE) {
+                        target_only = FALSE, evaluate = TRUE, conf = 0.75,
+                        group_pattern = NULL) {
 
   # Check that there is an active project
   if (is.null(project)) {
@@ -126,7 +148,9 @@ train_Model <- function(model_name, project = get_Project(), config = NULL,
     cat("Beginning training on CPU...")
   }
 
-  py_train_model$train_model(
+  start_time <- Sys.time()
+
+  save_dir <- py_train_model$train_model(
     config_file = reticulate::r_to_py(config),
     project_dir = reticulate::r_to_py(project),
     model_name  = reticulate::r_to_py(model_name),
@@ -135,6 +159,25 @@ train_Model <- function(model_name, project = get_Project(), config = NULL,
     t_only      = reticulate::r_to_py(target_only)
   )
 
-  return(invisible(T))
+  training_hours <- as.numeric(difftime(Sys.time(), start_time, units = "hours"))
+
+  # Ultralytics adds a number to the name if a model of that name already exists
+  saved_name <- basename(save_dir)
+  if (!identical(saved_name, model_name)) {
+    message("A model called '", model_name, "' already exists, so this model ",
+            "was saved as '", saved_name, "'.")
+  }
+
+  if (!evaluate) {
+    return(invisible(TRUE))
+  }
+
+  evaluate_Model(
+    model_name = saved_name,
+    conf = conf,
+    group_pattern = group_pattern,
+    training_time = training_hours,
+    project = project
+  )
 
 }

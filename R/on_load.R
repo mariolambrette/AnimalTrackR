@@ -28,6 +28,12 @@
     system.file("python", package = pkgname),
     delay_load = TRUE
   )
+
+  py_evaluate_model <<- reticulate::import_from_path(
+    "evaluate_model_py",
+    system.file("python", package = pkgname),
+    delay_load = TRUE
+  )
 }
 
 
@@ -43,3 +49,4 @@ py_extractImages <- NULL
 py_BehaviourVis  <- NULL
 py_run_model     <- NULL
 py_train_model   <- NULL
+py_evaluate_model <- NULL
