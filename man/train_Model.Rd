@@ -11,7 +11,8 @@ train_Model(
   target_only = FALSE,
   evaluate = TRUE,
   conf = 0.75,
-  group_pattern = NULL
+  group_pattern = NULL,
+  plot = interactive()
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ with \code{\link[=run_Model]{run_Model()}}, used in the evaluation. Default 0.75
 other group) each image came from, used in the evaluation. Not needed for
 images extracted with \code{\link[=extract_images]{extract_images()}}. See "Choosing a \code{group_pattern}"
 in \code{\link[=save_annotations]{save_annotations()}}.}
+
+\item{plot}{Logical. Draw a summary figure of the evaluation in the R
+session? Defaults to \code{TRUE} in interactive sessions.}
 }
 \value{
 Invisibly, the evaluation results (see \code{\link[=evaluate_Model]{evaluate_Model()}}), or \code{TRUE}

@@ -22,6 +22,8 @@ Imports:
     moveHMM,
     tidyr,
     stats,
+    graphics,
+    grDevices,
     CircStats,
     changepoint,
     fitdistrplus,

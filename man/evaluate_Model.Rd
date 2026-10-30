@@ -11,6 +11,7 @@ evaluate_Model(
   n_boot = 1000,
   seed = 0,
   training_time = NULL,
+  plot = interactive(),
   project = get_Project()
 )
 }
@@ -32,6 +33,10 @@ bootstrap confidence intervals. Not needed for images extracted with
 
 \item{training_time}{Optional training time in hours, recorded in
 \code{model_info.yaml}. Supplied automatically by \code{\link[=train_Model]{train_Model()}}.}
+
+\item{plot}{Logical. Draw the summary figure in the R session? Defaults to
+\code{TRUE} in interactive sessions. The figure is always saved as
+\code{evaluation_summary.png}.}
 
 \item{project}{The path to the TrackR project directory. By default this is
 supplied by \code{get_Project()}.}
@@ -76,6 +81,11 @@ located.
 
 \strong{Outputs}
 
+A summary is printed in the R session, covering the data in each set, how
+training went, the detection and tracking metrics, any test videos where
+the model performs less well, and inference speed. A summary figure is
+also drawn (see \code{plot}).
+
 All outputs are written to \verb{YOLO/models/<model_name>/evaluation/}:\tabular{ll}{
    File \tab Contents \cr
    \code{test_metrics.csv} \tab Standard detection metrics, overall and per class \cr
@@ -85,6 +95,7 @@ All outputs are written to \verb{YOLO/models/<model_name>/evaluation/}:\tabular{
    \code{test_predictions.csv} \tab Image-by-image results (annotated and predicted boxes, confidence, IoU, outcome), useful for finding and inspecting errors \cr
    \code{split_summary.csv} \tab Number of images, videos and annotations of each class in the training, validation and test sets \cr
    \code{model_info.yaml} \tab Training settings, epochs run, best epoch, training time, inference speed, hardware and software versions \cr
+   \code{evaluation_summary.png} \tab Summary figure: precision, recall and F1 across confidence thresholds, F1 for each test video, and position error \cr
    \verb{plots/} \tab Precision-recall, F1, precision and recall curves and confusion matrices from Ultralytics \cr
 }
 }

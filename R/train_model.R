@@ -54,6 +54,9 @@
 #'  images extracted with [extract_images()]. See "Choosing a `group_pattern`"
 #'  in [save_annotations()].
 #'
+#' @param plot Logical. Draw a summary figure of the evaluation in the R
+#'  session? Defaults to `TRUE` in interactive sessions.
+#'
 #' @return Invisibly, the evaluation results (see [evaluate_Model()]), or `TRUE`
 #'  if `evaluate = FALSE`. Training outputs, including the model weights, are
 #'  saved to 'YOLO/models/\{model_name\}'.
@@ -80,7 +83,7 @@
 
 train_Model <- function(model_name, project = get_Project(), config = NULL,
                         target_only = FALSE, evaluate = TRUE, conf = 0.75,
-                        group_pattern = NULL) {
+                        group_pattern = NULL, plot = interactive()) {
 
   # Check that there is an active project
   if (is.null(project)) {
@@ -177,6 +180,7 @@ train_Model <- function(model_name, project = get_Project(), config = NULL,
     conf = conf,
     group_pattern = group_pattern,
     training_time = training_hours,
+    plot = plot,
     project = project
   )
 
