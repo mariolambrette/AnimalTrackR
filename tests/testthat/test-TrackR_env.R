@@ -236,3 +236,23 @@ test_that("environment functions preserve state", {
     expect_equal(new_env, "animaltrackr")
   }
 })
+
+
+test_that("every Python package imported by AnimalTrackR is installed and checked", {
+  # Third-party modules imported anywhere in the package's Python code
+  py_files <- list.files(system.file("python", package = "AnimalTrackR"),
+                         pattern = "\\.py$", full.names = TRUE)
+  imports <- unlist(lapply(py_files, function(f) {
+    l <- readLines(f, warn = FALSE)
+    l <- l[grepl("^(import|from) ", l)]
+    sub("^(import|from) ([A-Za-z0-9_]+).*$", "\\2", l)
+  }))
+  std_lib <- c("os", "sys", "csv", "math", "random", "time", "platform")
+  # Installed automatically as dependencies of ultralytics
+  via_ultralytics <- c("numpy", "torch", "yaml")
+  needed <- setdiff(unique(imports), c(std_lib, via_ultralytics))
+
+  expect_setequal(needed, names(AnimalTrackR:::.trackr_py_modules()))
+  expect_true(all(AnimalTrackR:::.trackr_py_modules() %in%
+                    AnimalTrackR:::.trackr_py_packages()))
+})

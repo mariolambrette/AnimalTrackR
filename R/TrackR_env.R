@@ -122,7 +122,7 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
 
   if (!cuda.version) {
     reticulate::py_install(
-      c("opencv-python", "ultralytics"),
+      .trackr_py_packages(),
       envname = envname,
       pip = TRUE
     )
@@ -134,7 +134,7 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
     )
     reticulate::conda_install(
       envname = envname,
-      packages = "ultralytics",
+      packages = .trackr_py_packages(),
       pip = TRUE
     )
     reticulate::conda_install(
@@ -290,10 +290,10 @@ set_TrackR_env <- function(envname = "animaltrackr"){
 #'
 #' @description
 #' Checks a named conda environment ("animaltrackr" by default) to see if meets
-#' the python dependency requirements of AnimalTrackR. These include python 3.11,
-#' ultralytics and opencv installations. If your environment does not meet the
-#' necessary requirements, consider using [`create_TrackR_env()`] to create one
-#' that does.
+#' the python dependency requirements of AnimalTrackR: Python 3.11 with the
+#' ultralytics, opencv, pandas and matplotlib packages. If anything is missing,
+#' a message says what and gives the command to install it. Alternatively,
+#' [`create_TrackR_env()`] creates a new environment with everything needed.
 #'
 #' To further check an enviornment for GPU compatibility, you can use
 #' [`check_gpu()`].
@@ -324,13 +324,46 @@ check_TrackR_env <- function(envname = "animaltrackr"){
     ))
   }
 
-  # Check if required Python modules are available
-  ul <- reticulate::py_module_available("ultralytics")
-  cv <- reticulate::py_module_available("cv2")
+  # Check that the Python modules AnimalTrackR uses are available
+  modules <- .trackr_py_modules()
+  available <- vapply(names(modules), reticulate::py_module_available, logical(1))
+  if (!all(available)) {
+    missing <- unname(modules[!available])
+    message(
+      "The active Python environment is missing: ", paste(missing, collapse = ", "),
+      ".\nInstall with: reticulate::py_install(c(",
+      paste0('"', missing, '"', collapse = ", "),
+      "), envname = \"", envname, "\", pip = TRUE)\n",
+      "then restart R."
+    )
+  }
 
   # Check Python version
   py_version <- as.numeric(substr(reticulate::py_config()$version, 1, 4))
   pv <- py_version == 3.11
 
-  return(all(cv, ul, pv))
+  return(all(available, pv))
+}
+
+
+
+#' INTERNAL Python packages installed by create_TrackR_env()
+#'
+#' @description
+#' Every Python package imported by AnimalTrackR's Python code must be listed
+#' here (pip names), and in `.trackr_py_modules()` (import names), so that new
+#' environments have everything needed and `check_TrackR_env()` catches
+#' anything missing. pandas and matplotlib are listed explicitly because recent
+#' versions of ultralytics no longer install pandas.
+#'
+#' @noRd
+.trackr_py_packages <- function() {
+  c("opencv-python", "ultralytics", "pandas", "matplotlib")
+}
+
+#' INTERNAL Python modules AnimalTrackR imports (import name = pip name)
+#' @noRd
+.trackr_py_modules <- function() {
+  c(cv2 = "opencv-python", ultralytics = "ultralytics",
+    pandas = "pandas", matplotlib = "matplotlib")
 }
