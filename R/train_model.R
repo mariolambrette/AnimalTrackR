@@ -1,65 +1,84 @@
-#' Train a YOLOv11s model with data held in a TrackR project directory
+#' Train a detection model to find your animals
 #'
 #' @description
-#' This function takes the annotated data in a TrackR project directory and uses
-#' it to train a YOLO object detection model. This model can then be evaluated
-#' and used to track animals in a broader dataset.
+#' `train_Model()` uses the images you have annotated in your project to train a
+#' YOLO11 object detection model to find your animal in video frames. When
+#' training finishes, the model is automatically tested on images it has not
+#' seen (see "Checking the model" below), and a summary of how well it performs
+#' is shown in your R session.
 #'
 #' @details
-#' The base weights used for training are the default [YOLO11s detection weights](https://docs.ultralytics.com/models/yolo11/#supported-tasks-and-modes).
-#' Training is configured to run for up to 200 epochs, with an image size of 640
-#' and a batch size of 16. Training stops early if performance on the
-#' validation set has not improved for 50 epochs, and the weights from the
-#' best-performing epoch are kept. In almost all cases users will not need to worry about
-#' these parameters, with sufficient training data they should enable up to 100%
-#' accurate detection models to be trained.
+#' **What happens during training**
 #'
-#' For advanced users, or if you have a specific requirement for your model,
-#' these training hyperparamters can be modified. The training hyperparamters
-#' are specified in the 'train_config.yaml' file stored in the 'YOLO/configs/'
-#' directory of a TrackR project. users can navigate to this file and modify the
-#' already specified hyperparameters or add any other hyperparameters they wish.
-#' This should be done with caution as it could significantly harm training
-#' results but may be essential in some cases. For a full description of
-#' possible hyperparameters see the [ultralytics documentation](https://docs.ultralytics.com/modes/train/#train-settings)
+#' Training starts from a model that has already learnt to recognise everyday
+#' objects (the standard [YOLO11s](https://docs.ultralytics.com/models/yolo11/)
+#' model) and adapts it to your animal using your annotated images. Your
+#' images are used in three groups, set up by [save_annotations()]:
 #'
-#' Once training is complete the model is automatically tested on the images
-#' in the project's test set, which are not used at any point during training,
-#' and the results are saved alongside the model weights in
-#' 'YOLO/models/\{model_name\}/evaluation'. These include standard detection
-#' metrics, metrics that reflect how [run_Model()] will use the model, a record
-#' of the training settings and time, and the hardware and software used. See
-#' [evaluate_Model()] for full details.
+#' * the *training set*, which the model learns from;
+#' * the *validation set*, which is used during training to check progress and
+#'   decide when to stop;
+#' * the *test set*, which is only used once training has finished, to give a
+#'   fair measure of how well the model performs on new footage.
 #'
-#' @param model_name Character string indicating the name of the model to train
-#'  (used to distinguish between multiple iterations during development)
-#' @param project The path to the TrackR project directory. By default this is
-#'  supplied by `get_Project()`, most users will never need to change this.
-#' @param config `NULL` or the path to a YOLO dataset configuration yaml file.
-#'  The default (`NULL`) automatically creates a configuration file using the
-#'  TrackR project architecture. Most users will never need to change this.
-#' @param target_only Boolean indicating whether non target annotated objects
-#'  should be included in model training. This refers to the 'ZZZ' class which
-#'  contains non-target but visually similar objects. There may be cases where
-#'  including these in model training actually hampers performance (e.g. where
-#'  there are not very many of these objects). This parameters allows those
-#'  annotations to be excluded from model training.
+#' The model works through the whole training set many times. Each pass is
+#' called an *epoch*. Training runs for up to 200 epochs, but stops early if
+#' the model has not improved on the validation set for 50 epochs. The version
+#' of the model from its best epoch is kept. Training is much faster on a
+#' computer with a suitable graphics card (GPU), which is used automatically if
+#' available; on a standard computer it can take several hours or more.
 #'
-#' @param evaluate Logical. Should the trained model be evaluated on the test
-#'  set once training is complete? Default `TRUE`.
-#' @param conf Confidence threshold that will be used when deploying the model
-#'  with [run_Model()], used in the evaluation. Default 0.75.
-#' @param group_pattern Optional regular expression identifying the video (or
-#'  other group) each image came from, used in the evaluation. Not needed for
-#'  images extracted with [extract_images()]. See "Choosing a `group_pattern`"
-#'  in [save_annotations()].
+#' **Checking the model**
 #'
-#' @param plot Logical. Draw a summary figure of the evaluation in the R
-#'  session? Defaults to `TRUE` in interactive sessions.
+#' Once training is complete the model is tested on the test set using
+#' [evaluate_Model()]. A summary is printed in the R session and a summary
+#' figure drawn, showing how often the model finds your animal (recall), how
+#' often its detections are correct (precision), how precisely it locates the
+#' animal, and any test videos where it does less well. Full results, and a
+#' record of the training settings, hardware and software used, are saved in
+#' `YOLO/models/<model_name>/evaluation/`. See [evaluate_Model()] for how to
+#' read the results and what to do if the model is not good enough.
 #'
-#' @return Invisibly, the evaluation results (see [evaluate_Model()]), or `TRUE`
-#'  if `evaluate = FALSE`. Training outputs, including the model weights, are
-#'  saved to 'YOLO/models/\{model_name\}'.
+#' **Changing the training settings**
+#'
+#' The default settings work well in most cases and most users will not need
+#' to change them. They are stored in `YOLO/configs/train_config.yaml` in your
+#' project: an image size of 640 pixels, 16 images processed at a time (batch
+#' size), colour and rotation changes to the images switched off, and a fixed
+#' random seed (0) so that training is as repeatable as possible. Experienced
+#' users can edit this file to change these or add other settings (see the
+#' [Ultralytics documentation](https://docs.ultralytics.com/modes/train/#train-settings)),
+#' but changes should be made with care as they can make results worse.
+#' [restore_train_config()] restores the defaults.
+#'
+#' @param model_name A name for the model, e.g. `"model1"`. Use a new name each
+#'  time you train, so you can compare models. If the name is already in use,
+#'  a number is added to the end of it and a message tells you.
+#' @param project The path to the TrackR project folder. By default the active
+#'  project (from `get_Project()`), which is right for almost all uses.
+#' @param config Leave as `NULL` (the default) for almost all uses: AnimalTrackR
+#'  creates the file describing where your images are. Experienced users can
+#'  supply the path to their own YOLO dataset `.yaml` file.
+#' @param target_only Logical. If `TRUE`, annotations of neighbouring animals
+#'  (the `ZZZ` class) are ignored during training and the model learns only
+#'  your target animal. This can help if you have very few `ZZZ` annotations.
+#'  Default `FALSE`.
+#' @param evaluate Logical. Test the model on the test set when training
+#'  finishes? Default `TRUE`. See [evaluate_Model()].
+#' @param conf The confidence threshold you will use when tracking with
+#'  [run_Model()]: detections with lower confidence are ignored. Used when
+#'  testing the model. Default 0.75.
+#' @param group_pattern Optional. Identifies which video each image came from,
+#'  for the per-video results. Not needed for images extracted with
+#'  [extract_images()]. See "Choosing a `group_pattern`" in
+#'  [save_annotations()].
+#' @param plot Logical. Draw the summary figure in the R session? Defaults to
+#'  `TRUE` when working interactively. The figure is always saved.
+#'
+#' @return Invisibly, the test results (see [evaluate_Model()]), or `TRUE` if
+#'  `evaluate = FALSE`. The trained model is saved in
+#'  `YOLO/models/<model_name>/`, with the model itself at
+#'  `weights/best.pt`.
 #'
 #' @export
 #'
@@ -67,14 +86,15 @@
 #' \dontrun{
 #'
 #' # After images have been annotated, set the active project
-#' library(AnimaltrackR)
-#' set_Project("path/to/TackR_project")
+#' library(AnimalTrackR)
+#' set_Project("path/to/TrackR_project")
 #'
-#' # Train model on annotations
-#' train_Model("model1")
+#' # Train a model on your annotations. A summary of how well it performs on
+#' # the test set is printed when training finishes.
+#' results <- train_Model("model1")
 #'
-#' # Training results will be available in the 'YOLO/models/model1' directory
-#' # and test-set evaluation results in 'YOLO/models/model1/evaluation'
+#' # The model is saved in 'YOLO/models/model1' and the test results in
+#' # 'YOLO/models/model1/evaluation'
 #' }
 #'
 #' @import reticulate

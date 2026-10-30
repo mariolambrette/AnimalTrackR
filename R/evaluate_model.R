@@ -1,80 +1,145 @@
-#' Evaluate a trained detection model on the test set
+#' Test how well a trained model finds your animals
 #'
 #' @description
-#' `evaluate_Model()` tests a trained model on the images in the project's
-#' `YOLO/Test` folder, which are not used at any point during training. It is
-#' run automatically at the end of [train_Model()], so most users will not need
-#' to call it directly. It is useful for re-evaluating a model, for example at
-#' a different confidence threshold, or for models trained with an earlier
-#' version of AnimalTrackR.
+#' `evaluate_Model()` checks how well a trained model performs on the images in
+#' your project's test set. These images are held back and never used during
+#' training, and all frames from a given video are kept together (see
+#' [save_annotations()]), so the results show how the model is likely to
+#' perform on new footage.
+#'
+#' You will not usually need to call this function yourself: [train_Model()]
+#' runs it automatically when training finishes. Use it to re-check a model,
+#' for example with a different confidence threshold (`conf`), or to evaluate a
+#' model trained with an older version of AnimalTrackR.
 #'
 #' @details
-#' **Two kinds of evaluation**
+#' **Reading the results**
 #'
-#' *Standard detection metrics* (precision, recall, F1, mAP@0.5 and
-#' mAP@0.5:0.95 for each class) are calculated by Ultralytics. These are the
-#' figures usually reported for object detection models and allow comparison
-#' with other studies. Ultralytics reports precision and recall at the
-#' confidence threshold that maximises F1.
+#' The model gives every detection a *confidence* score between 0 and 1.
+#' [run_Model()] only uses detections whose confidence is at least `conf`
+#' (0.75 by default), and only the single most confident detection in each
+#' frame. The *tracking performance* figures show how the model performs when
+#' used in exactly this way, so these are the most relevant figures for
+#' tracking animals:
 #'
-#' *Deployment metrics* mirror how [run_Model()] uses the model to track an
-#' animal: on each image only the single most confident `Target` detection is
-#' kept, and it is used only if its confidence is at least `conf`. A detection
-#' is a true positive (TP) if it overlaps the annotated box with an
-#' intersection-over-union of at least 0.5; a detection on an image with no
-#' annotated target, or that does not overlap the annotated target, is a false
-#' positive (FP); a missed or misplaced target is a false negative (FN).
-#' Precision, recall and F1 are reported with two 95% confidence intervals:
-#' a Wilson interval, which treats images as independent, and a bootstrap
-#' interval that resamples whole videos (or other groups, see `group_pattern`),
-#' which allows for images from the same video being similar. For true
-#' positives, the distance between the centres of the predicted and annotated
-#' boxes is reported in pixels and relative to the length of the annotated box
-#' (its longer side), as a measure of how accurately the animal's position is
-#' located.
+#' * **Precision**: of the detections the model made, the proportion that were
+#'   in the right place. Low precision means the model is detecting things that
+#'   are not your animal (e.g. reflections, equipment or animals in
+#'   neighbouring tanks), which will create false jumps in your tracks.
+#' * **Recall**: of the images where the animal was visible, the proportion
+#'   where the model found it. Low recall means gaps in your tracks.
+#' * **F1**: a single score combining precision and recall. 1 is perfect.
+#' * **Position error**: the distance between the centre of the model's box and
+#'   the centre of the box you drew, in pixels and as a percentage of the
+#'   length of your box. This shows how precisely the animal's position is
+#'   measured. Ideally it should be small compared with how far your animals
+#'   typically move between the frames you analyse.
+#'
+#' A detection counts as "in the right place" if its box overlaps the box you
+#' drew by at least half (technically, an intersection-over-union of 0.5 or
+#' more).
+#'
+#' Each of precision, recall and F1 is given with a 95% *confidence interval*:
+#' the range the true value is likely to lie in. The interval is wide when the
+#' test set contains few images or videos. At least two test videos are needed
+#' to calculate it.
+#'
+#' The *detection metrics* table gives the standard figures used to report
+#' object detection models in scientific papers, for each class (your animal,
+#' `Target`, and neighbouring animals, `ZZZ`):
+#'
+#' * **Precision, recall and F1**, as above, but counting every detection and
+#'   using the confidence threshold that gives the highest F1.
+#' * **mAP@0.5** (mean average precision): a summary of precision and recall
+#'   across all confidence thresholds. 1 is perfect.
+#' * **mAP@0.5:0.95**: as mAP@0.5, but stricter about how tightly the boxes
+#'   fit the animal. It is always lower than mAP@0.5.
+#'
+#' These are useful for reporting and for comparing models. For judging
+#' whether a model is good enough for tracking, the tracking performance figures
+#' are more directly relevant.
+#'
+#' **Is my model good enough?**
+#'
+#' Values close to 1 for precision and recall are the aim, but what is good
+#' enough depends on your study. It is always worth looking at the model's
+#' output on your own videos with [demo_run()]. If the results are not good
+#' enough:
+#'
+#' * *Low recall (animals missed)*: annotate more images, particularly from the
+#'   videos or conditions where animals are missed (in
+#'   `test_predictions.csv`, images with outcome `FN` or `FP+FN` are the ones
+#'   where the animal was missed or detected in the wrong place). A lower
+#'   confidence threshold also increases recall, at some cost to precision.
+#' * *Low precision (false detections)*: if the false detections are animals in
+#'   neighbouring tanks, annotate them with the `ZZZ` class so the model learns
+#'   to ignore them. Raising the confidence threshold also reduces false
+#'   detections, at some cost to recall.
+#' * *Choosing a confidence threshold*: the left-hand panel of the summary
+#'   figure shows precision, recall and F1 at each threshold. A threshold where
+#'   F1 is high and the lines are fairly flat is a good choice.
+#' * *One or two poor videos*: the "Test videos" section of the summary lists
+#'   any videos with F1 below 0.95. These often have unusual conditions
+#'   (lighting, background, camera position). Adding training images from
+#'   similar footage usually helps.
 #'
 #' **Outputs**
 #'
-#' A summary is printed in the R session, covering the data in each set, how
-#' training went, the detection and tracking metrics, any test videos where
-#' the model performs less well, and inference speed. A summary figure is
-#' also drawn (see `plot`).
-#'
-#' All outputs are written to `YOLO/models/<model_name>/evaluation/`:
+#' A summary is printed in the R session covering: how many images and videos
+#' are in each set, how training went, the detection metrics, tracking
+#' performance, any test videos where the model does less well, and how fast
+#' the model runs. A summary figure is also drawn (see `plot`). Everything is
+#' saved in `YOLO/models/<model_name>/evaluation/`:
 #'
 #' | File | Contents |
 #' |---|---|
-#' | `test_metrics.csv` | Standard detection metrics, overall and per class |
-#' | `deployment_metrics.csv` | Deployment metrics with confidence intervals, box-centre error and the confidence threshold giving the highest F1 |
-#' | `threshold_sweep.csv` | Deployment precision, recall and F1 across confidence thresholds from 0.05 to 0.95 |
-#' | `per_group_metrics.csv` | Deployment metrics for each video (or other group) in the test set |
-#' | `test_predictions.csv` | Image-by-image results (annotated and predicted boxes, confidence, IoU, outcome), useful for finding and inspecting errors |
+#' | `evaluation_summary.png` | Summary figure: precision, recall and F1 at each confidence threshold; F1 for each test video; and position error |
+#' | `deployment_metrics.csv` | Tracking performance: precision, recall and F1 with confidence intervals, counts of correct, false and missed detections, position error, and the confidence threshold giving the highest F1 |
+#' | `test_metrics.csv` | Detection metrics for each class |
+#' | `threshold_sweep.csv` | Tracking precision, recall and F1 at confidence thresholds from 0.05 to 0.95 |
+#' | `per_group_metrics.csv` | Tracking performance for each test video |
+#' | `test_predictions.csv` | Results for every test image: the box you drew, the model's box and confidence, and the outcome (`TP` correct, `FP` false detection, `FN` missed, `FP+FN` detected in the wrong place, `TN` correctly found nothing). Useful for finding the images the model gets wrong |
 #' | `split_summary.csv` | Number of images, videos and annotations of each class in the training, validation and test sets |
-#' | `model_info.yaml` | Training settings, epochs run, best epoch, training time, inference speed, hardware and software versions |
-#' | `evaluation_summary.png` | Summary figure: precision, recall and F1 across confidence thresholds, F1 for each test video, and position error |
-#' | `plots/` | Precision-recall, F1, precision and recall curves and confusion matrices from Ultralytics |
+#' | `model_info.yaml` | A record of the training settings, how many epochs were run, training time, speed, and the computer and software versions used. Useful for the methods section of a paper |
+#' | `plots/` | Further plots from Ultralytics (the software that trains the model), including precision-recall curves and confusion matrices |
 #'
-#' @param model_name Name of the model to evaluate, as passed to [train_Model()].
-#' @param conf Confidence threshold used when deploying the model with
-#'   [run_Model()]. Default 0.75.
-#' @param group_pattern Optional regular expression identifying the video (or
-#'   other group) each test image came from, used for the per-group results and
-#'   bootstrap confidence intervals. Not needed for images extracted with
-#'   [extract_images()]. See "Choosing a `group_pattern`" in
-#'   [save_annotations()].
-#' @param n_boot Number of bootstrap resamples for confidence intervals.
-#' @param seed Random seed for the bootstrap.
+#' **Technical details**
+#'
+#' Two confidence intervals are saved in `deployment_metrics.csv`. The
+#' interval printed in the summary (`boot_lower`, `boot_upper`) comes from
+#' resampling whole test videos with replacement (`n_boot` times), which allows
+#' for frames from the same video being similar to each other. A Wilson
+#' interval, which treats every image as independent and so is usually
+#' narrower, is also given (`wilson_lower`, `wilson_upper`). Images with a
+#' detection that overlaps no annotated target, or overlaps it by less than
+#' 0.5, count as a false positive; where a target was annotated, a misplaced
+#' detection also counts as a false negative. The detection metrics are
+#' calculated by Ultralytics' validator on the test set, scoring only the
+#' classes the model was trained on (the `Empty` label is excluded).
+#'
+#' @param model_name Name of the model to evaluate, as given to
+#'   [train_Model()].
+#' @param conf Confidence threshold that will be used when tracking with
+#'   [run_Model()]. Detections with lower confidence are ignored. Default 0.75.
+#' @param group_pattern Optional. Identifies which video each test image came
+#'   from, for the per-video results and confidence intervals. Not needed for
+#'   images extracted with [extract_images()]. See "Choosing a `group_pattern`"
+#'   in [save_annotations()].
+#' @param n_boot Number of times the test videos are resampled to calculate
+#'   confidence intervals. The default (1000) is fine for almost all uses.
+#' @param seed Random seed, so the confidence intervals are the same each time.
 #' @param plot Logical. Draw the summary figure in the R session? Defaults to
-#'   `TRUE` in interactive sessions. The figure is always saved as
+#'   `TRUE` when working interactively. The figure is always saved as
 #'   `evaluation_summary.png`.
-#' @param training_time Optional training time in hours, recorded in
-#'   `model_info.yaml`. Supplied automatically by [train_Model()].
-#' @param project The path to the TrackR project directory. By default this is
-#'  supplied by `get_Project()`.
+#' @param training_time Training time in hours, recorded in `model_info.yaml`.
+#'   Filled in automatically by [train_Model()]; you do not need to supply it.
+#' @param project The path to the TrackR project folder. By default the active
+#'   project (from `get_Project()`), which is right for almost all uses.
 #'
-#' @return Invisibly, a list of data frames: `test_metrics`,
+#' @return Invisibly, a list containing the results tables (`test_metrics`,
 #'   `deployment_metrics`, `threshold_sweep`, `per_group_metrics`,
-#'   `split_summary`, and `model_info` (a list).
+#'   `split_summary`) as data frames, and `model_info`. The same information is
+#'   saved in the files listed above.
 #' @export
 #'
 #' @examples

@@ -2,7 +2,7 @@
 % Please edit documentation in R/evaluate_model.R
 \name{evaluate_Model}
 \alias{evaluate_Model}
-\title{Evaluate a trained detection model on the test set}
+\title{Test how well a trained model finds your animals}
 \usage{
 evaluate_Model(
   model_name,
@@ -16,88 +16,157 @@ evaluate_Model(
 )
 }
 \arguments{
-\item{model_name}{Name of the model to evaluate, as passed to \code{\link[=train_Model]{train_Model()}}.}
+\item{model_name}{Name of the model to evaluate, as given to
+\code{\link[=train_Model]{train_Model()}}.}
 
-\item{conf}{Confidence threshold used when deploying the model with
-\code{\link[=run_Model]{run_Model()}}. Default 0.75.}
+\item{conf}{Confidence threshold that will be used when tracking with
+\code{\link[=run_Model]{run_Model()}}. Detections with lower confidence are ignored. Default 0.75.}
 
-\item{group_pattern}{Optional regular expression identifying the video (or
-other group) each test image came from, used for the per-group results and
-bootstrap confidence intervals. Not needed for images extracted with
-\code{\link[=extract_images]{extract_images()}}. See "Choosing a \code{group_pattern}" in
-\code{\link[=save_annotations]{save_annotations()}}.}
+\item{group_pattern}{Optional. Identifies which video each test image came
+from, for the per-video results and confidence intervals. Not needed for
+images extracted with \code{\link[=extract_images]{extract_images()}}. See "Choosing a \code{group_pattern}"
+in \code{\link[=save_annotations]{save_annotations()}}.}
 
-\item{n_boot}{Number of bootstrap resamples for confidence intervals.}
+\item{n_boot}{Number of times the test videos are resampled to calculate
+confidence intervals. The default (1000) is fine for almost all uses.}
 
-\item{seed}{Random seed for the bootstrap.}
+\item{seed}{Random seed, so the confidence intervals are the same each time.}
 
-\item{training_time}{Optional training time in hours, recorded in
-\code{model_info.yaml}. Supplied automatically by \code{\link[=train_Model]{train_Model()}}.}
+\item{training_time}{Training time in hours, recorded in \code{model_info.yaml}.
+Filled in automatically by \code{\link[=train_Model]{train_Model()}}; you do not need to supply it.}
 
 \item{plot}{Logical. Draw the summary figure in the R session? Defaults to
-\code{TRUE} in interactive sessions. The figure is always saved as
+\code{TRUE} when working interactively. The figure is always saved as
 \code{evaluation_summary.png}.}
 
-\item{project}{The path to the TrackR project directory. By default this is
-supplied by \code{get_Project()}.}
+\item{project}{The path to the TrackR project folder. By default the active
+project (from \code{get_Project()}), which is right for almost all uses.}
 }
 \value{
-Invisibly, a list of data frames: \code{test_metrics},
+Invisibly, a list containing the results tables (\code{test_metrics},
 \code{deployment_metrics}, \code{threshold_sweep}, \code{per_group_metrics},
-\code{split_summary}, and \code{model_info} (a list).
+\code{split_summary}) as data frames, and \code{model_info}. The same information is
+saved in the files listed above.
 }
 \description{
-\code{evaluate_Model()} tests a trained model on the images in the project's
-\code{YOLO/Test} folder, which are not used at any point during training. It is
-run automatically at the end of \code{\link[=train_Model]{train_Model()}}, so most users will not need
-to call it directly. It is useful for re-evaluating a model, for example at
-a different confidence threshold, or for models trained with an earlier
-version of AnimalTrackR.
+\code{evaluate_Model()} checks how well a trained model performs on the images in
+your project's test set. These images are held back and never used during
+training, and all frames from a given video are kept together (see
+\code{\link[=save_annotations]{save_annotations()}}), so the results show how the model is likely to
+perform on new footage.
+
+You will not usually need to call this function yourself: \code{\link[=train_Model]{train_Model()}}
+runs it automatically when training finishes. Use it to re-check a model,
+for example with a different confidence threshold (\code{conf}), or to evaluate a
+model trained with an older version of AnimalTrackR.
 }
 \details{
-\strong{Two kinds of evaluation}
+\strong{Reading the results}
 
-\emph{Standard detection metrics} (precision, recall, F1, mAP@0.5 and
-mAP@0.5:0.95 for each class) are calculated by Ultralytics. These are the
-figures usually reported for object detection models and allow comparison
-with other studies. Ultralytics reports precision and recall at the
-confidence threshold that maximises F1.
+The model gives every detection a \emph{confidence} score between 0 and 1.
+\code{\link[=run_Model]{run_Model()}} only uses detections whose confidence is at least \code{conf}
+(0.75 by default), and only the single most confident detection in each
+frame. The \emph{tracking performance} figures show how the model performs when
+used in exactly this way, so these are the most relevant figures for
+tracking animals:
+\itemize{
+\item \strong{Precision}: of the detections the model made, the proportion that were
+in the right place. Low precision means the model is detecting things that
+are not your animal (e.g. reflections, equipment or animals in
+neighbouring tanks), which will create false jumps in your tracks.
+\item \strong{Recall}: of the images where the animal was visible, the proportion
+where the model found it. Low recall means gaps in your tracks.
+\item \strong{F1}: a single score combining precision and recall. 1 is perfect.
+\item \strong{Position error}: the distance between the centre of the model's box and
+the centre of the box you drew, in pixels and as a percentage of the
+length of your box. This shows how precisely the animal's position is
+measured. Ideally it should be small compared with how far your animals
+typically move between the frames you analyse.
+}
 
-\emph{Deployment metrics} mirror how \code{\link[=run_Model]{run_Model()}} uses the model to track an
-animal: on each image only the single most confident \code{Target} detection is
-kept, and it is used only if its confidence is at least \code{conf}. A detection
-is a true positive (TP) if it overlaps the annotated box with an
-intersection-over-union of at least 0.5; a detection on an image with no
-annotated target, or that does not overlap the annotated target, is a false
-positive (FP); a missed or misplaced target is a false negative (FN).
-Precision, recall and F1 are reported with two 95\% confidence intervals:
-a Wilson interval, which treats images as independent, and a bootstrap
-interval that resamples whole videos (or other groups, see \code{group_pattern}),
-which allows for images from the same video being similar. For true
-positives, the distance between the centres of the predicted and annotated
-boxes is reported in pixels and relative to the length of the annotated box
-(its longer side), as a measure of how accurately the animal's position is
-located.
+A detection counts as "in the right place" if its box overlaps the box you
+drew by at least half (technically, an intersection-over-union of 0.5 or
+more).
+
+Each of precision, recall and F1 is given with a 95\% \emph{confidence interval}:
+the range the true value is likely to lie in. The interval is wide when the
+test set contains few images or videos. At least two test videos are needed
+to calculate it.
+
+The \emph{detection metrics} table gives the standard figures used to report
+object detection models in scientific papers, for each class (your animal,
+\code{Target}, and neighbouring animals, \code{ZZZ}):
+\itemize{
+\item \strong{Precision, recall and F1}, as above, but counting every detection and
+using the confidence threshold that gives the highest F1.
+\item \strong{mAP@0.5} (mean average precision): a summary of precision and recall
+across all confidence thresholds. 1 is perfect.
+\item \strong{mAP@0.5:0.95}: as mAP@0.5, but stricter about how tightly the boxes
+fit the animal. It is always lower than mAP@0.5.
+}
+
+These are useful for reporting and for comparing models. For judging
+whether a model is good enough for tracking, the tracking performance figures
+are more directly relevant.
+
+\strong{Is my model good enough?}
+
+Values close to 1 for precision and recall are the aim, but what is good
+enough depends on your study. It is always worth looking at the model's
+output on your own videos with \code{\link[=demo_run]{demo_run()}}. If the results are not good
+enough:
+\itemize{
+\item \emph{Low recall (animals missed)}: annotate more images, particularly from the
+videos or conditions where animals are missed (in
+\code{test_predictions.csv}, images with outcome \code{FN} or \code{FP+FN} are the ones
+where the animal was missed or detected in the wrong place). A lower
+confidence threshold also increases recall, at some cost to precision.
+\item \emph{Low precision (false detections)}: if the false detections are animals in
+neighbouring tanks, annotate them with the \code{ZZZ} class so the model learns
+to ignore them. Raising the confidence threshold also reduces false
+detections, at some cost to recall.
+\item \emph{Choosing a confidence threshold}: the left-hand panel of the summary
+figure shows precision, recall and F1 at each threshold. A threshold where
+F1 is high and the lines are fairly flat is a good choice.
+\item \emph{One or two poor videos}: the "Test videos" section of the summary lists
+any videos with F1 below 0.95. These often have unusual conditions
+(lighting, background, camera position). Adding training images from
+similar footage usually helps.
+}
 
 \strong{Outputs}
 
-A summary is printed in the R session, covering the data in each set, how
-training went, the detection and tracking metrics, any test videos where
-the model performs less well, and inference speed. A summary figure is
-also drawn (see \code{plot}).
-
-All outputs are written to \verb{YOLO/models/<model_name>/evaluation/}:\tabular{ll}{
+A summary is printed in the R session covering: how many images and videos
+are in each set, how training went, the detection metrics, tracking
+performance, any test videos where the model does less well, and how fast
+the model runs. A summary figure is also drawn (see \code{plot}). Everything is
+saved in \verb{YOLO/models/<model_name>/evaluation/}:\tabular{ll}{
    File \tab Contents \cr
-   \code{test_metrics.csv} \tab Standard detection metrics, overall and per class \cr
-   \code{deployment_metrics.csv} \tab Deployment metrics with confidence intervals, box-centre error and the confidence threshold giving the highest F1 \cr
-   \code{threshold_sweep.csv} \tab Deployment precision, recall and F1 across confidence thresholds from 0.05 to 0.95 \cr
-   \code{per_group_metrics.csv} \tab Deployment metrics for each video (or other group) in the test set \cr
-   \code{test_predictions.csv} \tab Image-by-image results (annotated and predicted boxes, confidence, IoU, outcome), useful for finding and inspecting errors \cr
+   \code{evaluation_summary.png} \tab Summary figure: precision, recall and F1 at each confidence threshold; F1 for each test video; and position error \cr
+   \code{deployment_metrics.csv} \tab Tracking performance: precision, recall and F1 with confidence intervals, counts of correct, false and missed detections, position error, and the confidence threshold giving the highest F1 \cr
+   \code{test_metrics.csv} \tab Detection metrics for each class \cr
+   \code{threshold_sweep.csv} \tab Tracking precision, recall and F1 at confidence thresholds from 0.05 to 0.95 \cr
+   \code{per_group_metrics.csv} \tab Tracking performance for each test video \cr
+   \code{test_predictions.csv} \tab Results for every test image: the box you drew, the model's box and confidence, and the outcome (\code{TP} correct, \code{FP} false detection, \code{FN} missed, \code{FP+FN} detected in the wrong place, \code{TN} correctly found nothing). Useful for finding the images the model gets wrong \cr
    \code{split_summary.csv} \tab Number of images, videos and annotations of each class in the training, validation and test sets \cr
-   \code{model_info.yaml} \tab Training settings, epochs run, best epoch, training time, inference speed, hardware and software versions \cr
-   \code{evaluation_summary.png} \tab Summary figure: precision, recall and F1 across confidence thresholds, F1 for each test video, and position error \cr
-   \verb{plots/} \tab Precision-recall, F1, precision and recall curves and confusion matrices from Ultralytics \cr
+   \code{model_info.yaml} \tab A record of the training settings, how many epochs were run, training time, speed, and the computer and software versions used. Useful for the methods section of a paper \cr
+   \verb{plots/} \tab Further plots from Ultralytics (the software that trains the model), including precision-recall curves and confusion matrices \cr
 }
+
+
+\strong{Technical details}
+
+Two confidence intervals are saved in \code{deployment_metrics.csv}. The
+interval printed in the summary (\code{boot_lower}, \code{boot_upper}) comes from
+resampling whole test videos with replacement (\code{n_boot} times), which allows
+for frames from the same video being similar to each other. A Wilson
+interval, which treats every image as independent and so is usually
+narrower, is also given (\code{wilson_lower}, \code{wilson_upper}). Images with a
+detection that overlaps no annotated target, or overlaps it by less than
+0.5, count as a false positive; where a target was annotated, a misplaced
+detection also counts as a false negative. The detection metrics are
+calculated by Ultralytics' validator on the test set, scoring only the
+classes the model was trained on (the \code{Empty} label is excluded).
 }
 \examples{
 \dontrun{
