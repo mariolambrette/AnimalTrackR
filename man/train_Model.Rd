@@ -12,7 +12,11 @@ train_Model(
   evaluate = TRUE,
   conf = 0.75,
   group_pattern = NULL,
-  plot = interactive()
+  plot = interactive(),
+  n_train = NULL,
+  n_train_seed = 0,
+  seed = NULL,
+  device = NULL
 )
 }
 \arguments{
@@ -46,6 +50,25 @@ for the per-video results. Not needed for images extracted with
 
 \item{plot}{Logical. Draw the summary figure in the R session? Defaults to
 \code{TRUE} when working interactively. The figure is always saved.}
+
+\item{n_train}{Optional. Train on a random selection of this many of the
+training images instead of all of them. Useful for checking whether you
+have annotated enough images (see "Have I annotated enough images?"
+below). The validation and test sets are unchanged.}
+
+\item{n_train_seed}{Random seed used to choose the \code{n_train} images, so the
+same images are chosen each time. Use different seeds to see how much
+results vary with the images chosen.}
+
+\item{seed}{Optional random seed for training, overriding the one in
+\code{train_config.yaml} (0 by default). Training with different seeds shows how
+much results vary from run to run.}
+
+\item{device}{Optional. Where to train: \code{"cpu"}, \code{"gpu"}, or a GPU number
+(e.g. \code{0} or \code{1}) on a computer with more than one GPU. By default the GPU
+is used if there is one. On a computer with two GPUs, you can train two
+models at once in separate R sessions, one with \code{device = 0} and one with
+\code{device = 1}.}
 }
 \value{
 Invisibly, the test results (see \code{\link[=evaluate_Model]{evaluate_Model()}}), or \code{TRUE} if
@@ -92,6 +115,23 @@ animal, and any test videos where it does less well. Full results, and a
 record of the training settings, hardware and software used, are saved in
 \verb{YOLO/models/<model_name>/evaluation/}. See \code{\link[=evaluate_Model]{evaluate_Model()}} for how to
 read the results and what to do if the model is not good enough.
+
+\strong{Have I annotated enough images?}
+
+Train a few models on increasing numbers of your training images using
+\code{n_train}, and compare their test results. If performance is still
+improving as images are added, annotating more images is likely to help; if
+it has levelled off, you probably have enough. For example, with 600
+training images:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{for (n in c(150, 300, 450)) \{
+  train_Model(paste0("model_n", n), n_train = n)
+\}
+train_Model("model_all")
+}\if{html}{\out{</div>}}
+
+Repeating each size with a few different \code{n_train_seed} values shows how much
+the results depend on which images happen to be chosen.
 
 \strong{Changing the training settings}
 

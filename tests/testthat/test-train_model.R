@@ -290,3 +290,61 @@ test_that("train_Model config parameter accepts yaml path", {
   expect_true(file.exists(temp_yaml))
   expect_equal(tools::file_ext(temp_yaml), "yaml")
 })
+
+
+# ---- n_train, seed and device -------------------------------------------
+
+test_that("train_Model validates seed, device and n_train before training", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+
+  expect_error(train_Model("m", device = "tpu"), "GPU number")
+  expect_error(train_Model("m", device = -1), "GPU number")
+  expect_error(train_Model("m", device = 1.5), "GPU number")
+  expect_error(train_Model("m", seed = -1), "whole number")
+  expect_error(train_Model("m", seed = "a"), "whole number")
+  cfg <- tempfile(fileext = ".yaml"); writeLines("path: x", cfg)
+  expect_error(train_Model("m", n_train = 10, config = cfg), "custom `config`")
+})
+
+
+test_that(".train_subset picks a reproducible subset and writes a config for it", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+  for (i in 1:40) {
+    writeLines("x", file.path(temp_proj, "YOLO", "Train", "images", sprintf("Group1_%d_%d.jpg", i %% 5, i)))
+  }
+
+  a <- suppressMessages(AnimalTrackR:::.train_subset(temp_proj, "m10", 10, n_train_seed = 1))
+  b <- suppressMessages(AnimalTrackR:::.train_subset(temp_proj, "m10b", 10, n_train_seed = 1))
+  c <- suppressMessages(AnimalTrackR:::.train_subset(temp_proj, "m10c", 10, n_train_seed = 2))
+  expect_length(a$images, 10)
+  expect_identical(basename(a$images), basename(b$images))
+  expect_false(identical(basename(a$images), basename(c$images)))
+
+  # The list file holds the chosen images, and the config's train entry points to it
+  list_file <- file.path(temp_proj, "YOLO", "configs", "train_images_m10.txt")
+  expect_equal(basename(readLines(list_file)), basename(a$images))
+  cfg <- yaml::read_yaml(a$config)
+  expect_equal(basename(cfg$train), "train_images_m10.txt")
+  expect_equal(cfg$val, "Val/images")
+  expect_equal(basename(a$config), "YOLO_config_m10.yaml")
+
+  expect_error(AnimalTrackR:::.train_subset(temp_proj, "m", 41), "more than the 40")
+  expect_error(AnimalTrackR:::.train_subset(temp_proj, "m", 0), "whole number")
+})
+
+
+test_that(".train_subset leaves the user's random numbers unchanged", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+  for (i in 1:20) writeLines("x", file.path(temp_proj, "YOLO", "Train", "images", paste0("img", i, ".jpg")))
+
+  set.seed(42); expected <- runif(1)
+  set.seed(42)
+  suppressMessages(AnimalTrackR:::.train_subset(temp_proj, "m", 5, n_train_seed = 7))
+  expect_equal(runif(1), expected)
+})

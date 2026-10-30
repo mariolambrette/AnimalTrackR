@@ -81,3 +81,12 @@ test_that("deployment scoring rules are correct", {
   w <- unlist(ev$`_wilson`(19L, 20L))
   expect_true(w[1] < 0.95 && w[2] > 0.95 && w[2] <= 1)
 })
+
+
+test_that("evaluate_Model checks external weights and device", {
+  temp_proj <- create_temp_project()
+  on.exit(cleanup_temp_project(temp_proj))
+  set_Project(temp_proj)
+  expect_error(evaluate_Model("does/not/exist/best.pt"), "weights not found")
+  expect_error(evaluate_Model("m1", device = "tpu"), "GPU number")
+})

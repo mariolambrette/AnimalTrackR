@@ -103,6 +103,21 @@
 #' | `model_info.yaml` | A record of the training settings, how many epochs were run, training time, speed, and the computer and software versions used. Useful for the methods section of a paper |
 #' | `plots/` | Further plots from Ultralytics (the software that trains the model), including precision-recall curves and confusion matrices |
 #'
+#' **Testing a model on other footage**
+#'
+#' Give `evaluate_Model()` the path to another model's weights file to test
+#' that model on the current project's test images. For example, a model
+#' trained on one experiment can be tested on footage from another:
+#'
+#' ```
+#' set_Project("path/to/zebrafish_project")
+#' evaluate_Model("path/to/trout_project/YOLO/models/trout_model/weights/best.pt")
+#' ```
+#'
+#' The results are saved in `YOLO/evaluations/trout_model/` in the zebrafish
+#' project. Only the classes both projects share are meaningful; for example, a
+#' project with no `ZZZ` annotations has no `ZZZ` results.
+#'
 #' **Technical details**
 #'
 #' Two confidence intervals are saved in `deployment_metrics.csv`. The
@@ -118,7 +133,10 @@
 #' classes the model was trained on (the `Empty` label is excluded).
 #'
 #' @param model_name Name of the model to evaluate, as given to
-#'   [train_Model()].
+#'   [train_Model()]. Alternatively, the path to a model's weights file
+#'   (`.pt`), for example a model trained in a different project. This lets
+#'   you test how well a model works on another set of footage (see
+#'   "Testing a model on other footage" below).
 #' @param conf Confidence threshold that will be used when tracking with
 #'   [run_Model()] (its `conf` argument). Detections with lower confidence are
 #'   ignored. Default 0.75.
@@ -132,6 +150,13 @@
 #' @param plot Logical. Draw the summary figure in the R session? Defaults to
 #'   `TRUE` when working interactively. The figure is always saved as
 #'   `evaluation_summary.png`.
+#' @param device Where to run the model: `"auto"` (the default: the GPU if
+#'   there is one, otherwise the CPU), `"cpu"`, `"gpu"`, or a GPU number (e.g.
+#'   `1`). Running on `"cpu"` on a computer with a GPU shows how fast the model
+#'   would run for users without one.
+#' @param output_dir Folder to save the results in. By default,
+#'   `YOLO/models/<model_name>/evaluation` for models in this project, or
+#'   `YOLO/evaluations/<model folder name>` for models from elsewhere.
 #' @param training_time Training time in hours, recorded in `model_info.yaml`.
 #'   Filled in automatically by [train_Model()]; you do not need to supply it.
 #' @param project The path to the TrackR project folder. By default the active
@@ -150,6 +175,14 @@
 #'
 #' # Re-evaluate at a lower deployment confidence threshold
 #' evaluate_Model("model1", conf = 0.5)
+#'
+#' # Measure how fast the model runs without a GPU
+#' evaluate_Model("model1", device = "cpu",
+#'                output_dir = file.path(get_Project(), "YOLO", "models",
+#'                                       "model1", "evaluation_cpu"))
+#'
+#' # Test a model trained in another project on this project's test images
+#' evaluate_Model("path/to/other_project/YOLO/models/model1/weights/best.pt")
 #' }
 evaluate_Model <- function(model_name,
                            conf = 0.75,
@@ -158,18 +191,34 @@ evaluate_Model <- function(model_name,
                            seed = 0,
                            training_time = NULL,
                            plot = interactive(),
+                           device = "auto",
+                           output_dir = NULL,
                            project = get_Project()) {
 
   if (is.null(project)) {
     stop("No active TrackR project. Activate a project using `set_Project()`.")
   }
   .check_conf(conf)
+  .check_device(device, allow_auto = TRUE)
 
-  model_dir <- file.path(project, "YOLO", "models", model_name)
-  weights <- file.path(model_dir, "weights", "best.pt")
-  if (!file.exists(weights)) {
-    stop("No trained weights found for model '", model_name, "' (expected ",
-         weights, ").")
+  if (tolower(tools::file_ext(model_name)) == "pt") {
+    # A model from elsewhere, e.g. trained in another project
+    weights <- model_name
+    if (!file.exists(weights)) {
+      stop("Model weights not found: ", weights)
+    }
+    model_dir <- dirname(dirname(weights))
+    label <- basename(model_dir)
+    default_dir <- file.path(project, "YOLO", "evaluations", label)
+  } else {
+    model_dir <- file.path(project, "YOLO", "models", model_name)
+    weights <- file.path(model_dir, "weights", "best.pt")
+    if (!file.exists(weights)) {
+      stop("No trained weights found for model '", model_name, "' (expected ",
+           weights, ").")
+    }
+    label <- model_name
+    default_dir <- file.path(model_dir, "evaluation")
   }
 
   test_images <- list.files(file.path(project, "YOLO", "Test", "images"),
@@ -178,7 +227,7 @@ evaluate_Model <- function(model_name,
     stop("There are no test images in the project, so the model cannot be evaluated.")
   }
 
-  eval_dir <- file.path(model_dir, "evaluation")
+  eval_dir <- if (is.null(output_dir)) default_dir else output_dir
   dir.create(eval_dir, showWarnings = FALSE, recursive = TRUE)
 
   # Split summary
@@ -191,8 +240,19 @@ evaluate_Model <- function(model_name,
 
   sys_info <- py_evaluate_model$system_info()
   gpu <- isTRUE(sys_info$cuda_available)
+  py_device <- if (identical(device, "auto")) {
+    if (gpu) 0L else "cpu"
+  } else if (identical(device, "cpu")) {
+    "cpu"
+  } else {
+    if (!gpu) {
+      stop("A GPU was requested but none is available. Use `device = \"cpu\"`, ",
+           "or see `?configure_cuda`.")
+    }
+    if (identical(device, "gpu")) 0L else as.integer(device)
+  }
 
-  cat("Evaluating '", model_name, "' on ", length(test_images),
+  cat("Evaluating '", label, "' on ", length(test_images),
       " test images from ", length(unique(groups)), " videos/groups...\n", sep = "")
 
   res <- py_evaluate_model$evaluate(
@@ -205,7 +265,8 @@ evaluate_Model <- function(model_name,
     conf        = conf,
     n_boot      = as.integer(n_boot),
     seed        = as.integer(seed),
-    gpu         = gpu
+    gpu         = gpu,
+    device      = py_device
   )
 
   # Model information
@@ -213,8 +274,17 @@ evaluate_Model <- function(model_name,
   if (!is.null(training_time)) {
     train_info$training_time_hours <- round(training_time, 3)
   }
+  run_file <- file.path(model_dir, "animaltrackr_run.yaml")
+  if (file.exists(run_file)) {
+    run <- yaml::read_yaml(run_file)
+    train_info[c("n_train_used", "n_train_available", "n_train_seed")] <-
+      run[c("n_train_used", "n_train_available", "n_train_seed")]
+    train_info <- Filter(Negate(is.null), train_info)
+  }
   model_info <- list(
-    model_name = model_name,
+    model_name = label,
+    model_weights = normalizePath(weights, winslash = "/"),
+    evaluated_on_project = normalizePath(project, winslash = "/"),
     evaluated = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     deployment_conf = conf,
     training = train_info,
@@ -322,6 +392,12 @@ evaluate_Model <- function(model_name,
                 ifelse(is.null(tr$best_epoch), "?", tr$best_epoch)))
     if (!is.null(tr$training_time_hours)) {
       cat(sprintf("  Training time: %.2f hours\n", tr$training_time_hours))
+    }
+    if (!is.null(tr$n_train_used) && !is.null(tr$n_train_available) &&
+        tr$n_train_used < tr$n_train_available) {
+      cat(sprintf("  Trained on %d of the %d training images (subset seed %s)\n",
+                  as.integer(tr$n_train_used), as.integer(tr$n_train_available),
+                  ifelse(is.null(tr$n_train_seed), "?", tr$n_train_seed)))
     }
   }
 

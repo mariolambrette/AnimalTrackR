@@ -12,12 +12,17 @@ evaluate_Model(
   seed = 0,
   training_time = NULL,
   plot = interactive(),
+  device = "auto",
+  output_dir = NULL,
   project = get_Project()
 )
 }
 \arguments{
 \item{model_name}{Name of the model to evaluate, as given to
-\code{\link[=train_Model]{train_Model()}}.}
+\code{\link[=train_Model]{train_Model()}}. Alternatively, the path to a model's weights file
+(\code{.pt}), for example a model trained in a different project. This lets
+you test how well a model works on another set of footage (see
+"Testing a model on other footage" below).}
 
 \item{conf}{Confidence threshold that will be used when tracking with
 \code{\link[=run_Model]{run_Model()}} (its \code{conf} argument). Detections with lower confidence are
@@ -39,6 +44,15 @@ Filled in automatically by \code{\link[=train_Model]{train_Model()}}; you do not
 \item{plot}{Logical. Draw the summary figure in the R session? Defaults to
 \code{TRUE} when working interactively. The figure is always saved as
 \code{evaluation_summary.png}.}
+
+\item{device}{Where to run the model: \code{"auto"} (the default: the GPU if
+there is one, otherwise the CPU), \code{"cpu"}, \code{"gpu"}, or a GPU number (e.g.
+\code{1}). Running on \code{"cpu"} on a computer with a GPU shows how fast the model
+would run for users without one.}
+
+\item{output_dir}{Folder to save the results in. By default,
+\verb{YOLO/models/<model_name>/evaluation} for models in this project, or
+\verb{YOLO/evaluations/<model folder name>} for models from elsewhere.}
 
 \item{project}{The path to the TrackR project folder. By default the active
 project (from \code{get_Project()}), which is right for almost all uses.}
@@ -155,6 +169,20 @@ saved in \verb{YOLO/models/<model_name>/evaluation/}:\tabular{ll}{
 }
 
 
+\strong{Testing a model on other footage}
+
+Give \code{evaluate_Model()} the path to another model's weights file to test
+that model on the current project's test images. For example, a model
+trained on one experiment can be tested on footage from another:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{set_Project("path/to/zebrafish_project")
+evaluate_Model("path/to/trout_project/YOLO/models/trout_model/weights/best.pt")
+}\if{html}{\out{</div>}}
+
+The results are saved in \verb{YOLO/evaluations/trout_model/} in the zebrafish
+project. Only the classes both projects share are meaningful; for example, a
+project with no \code{ZZZ} annotations has no \code{ZZZ} results.
+
 \strong{Technical details}
 
 Two confidence intervals are saved in \code{deployment_metrics.csv}. The
@@ -176,5 +204,13 @@ evaluate_Model("model1")
 
 # Re-evaluate at a lower deployment confidence threshold
 evaluate_Model("model1", conf = 0.5)
+
+# Measure how fast the model runs without a GPU
+evaluate_Model("model1", device = "cpu",
+               output_dir = file.path(get_Project(), "YOLO", "models",
+                                      "model1", "evaluation_cpu"))
+
+# Test a model trained in another project on this project's test images
+evaluate_Model("path/to/other_project/YOLO/models/model1/weights/best.pt")
 }
 }

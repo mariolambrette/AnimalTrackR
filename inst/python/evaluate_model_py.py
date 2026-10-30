@@ -202,7 +202,7 @@ def training_summary(model_dir):
 # --------------------------------------------------------------------------
 
 def evaluate(weights, data_config, project_dir, eval_dir, test_images, groups,
-             conf=0.75, n_boot=1000, seed=0, gpu=False):
+             conf=0.75, n_boot=1000, seed=0, gpu=False, device=None):
     """
     Evaluate a trained model on the test set.
 
@@ -215,11 +215,15 @@ def evaluate(weights, data_config, project_dir, eval_dir, test_images, groups,
     :param conf: deployment confidence threshold (as used by run_Model)
     :param n_boot: number of bootstrap resamples (by group) for CIs
     :param seed: random seed for the bootstrap
-    :param gpu: whether to use the GPU
+    :param gpu: whether to use the GPU (GPU 0); ignored if device is given
+    :param device: a GPU index (e.g. 0 or 1) or "cpu" 
     :return: dict summarising the evaluation
     """
     os.makedirs(eval_dir, exist_ok=True)
-    device = 0 if gpu else "cpu"
+    if device is None:
+        device = 0 if gpu else "cpu"
+    elif isinstance(device, float):
+        device = int(device)
     model = ultralytics.YOLO(weights)
     names = model.names
 
@@ -378,7 +382,7 @@ def evaluate(weights, data_config, project_dir, eval_dir, test_images, groups,
 
     speed = {k: _fmt(v, 2) for k, v in getattr(metrics, "speed", {}).items()}
     speed["deployment_ms_per_image"] = _fmt(secs_per_img * 1000, 2)
-    speed["device"] = "gpu" if gpu else "cpu"
+    speed["device"] = "cpu" if device == "cpu" else f"gpu {device}"
 
     return {
         "standard": std_rows,

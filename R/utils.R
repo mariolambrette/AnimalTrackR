@@ -45,7 +45,8 @@ utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
 #' @importFrom yaml as.yaml
 #' @importFrom stringr str_replace_all
 
-.create_YOLO_config <- function(project = get_Project()){
+.create_YOLO_config <- function(project = get_Project(), train = "Train/images",
+                                file_name = "YOLO_config.yaml"){
 
   if (is.null(get_Project())) {
     stop("No active TrackR project found. Please activate a project with 
@@ -55,7 +56,7 @@ utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
   # Create the names list of configurations
   config <- list(
     path = file.path(project, "YOLO"),
-    train = "Train/images",
+    train = train,
     val = "Val/images",
     test = "Test/images",
     names = list(
@@ -66,7 +67,7 @@ utils::globalVariables(c("V1", "Type", "num", ".", "bbox_x", "image_width",
   )
 
   # Construct the savepath
-  yaml_path <- file.path(project, "YOLO", "configs", "YOLO_config.yaml")
+  yaml_path <- file.path(project, "YOLO", "configs", file_name)
 
   # Convert list to yaml
   yaml_text <- yaml::as.yaml(config)
