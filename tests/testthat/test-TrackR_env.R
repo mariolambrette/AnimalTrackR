@@ -119,8 +119,23 @@ test_that("PyTorch CUDA builds are tried newest first, never newer than the driv
 })
 
 
-# Simulated pip: records calls; `builds` are the index tags that have torch 2.15.0
-.fake_pip <- function(builds, install_ok = TRUE) {
+test_that("available versions are read only from the 'Available versions' line", {
+  out <- c(
+    "WARNING: pip index is currently an experimental command.",
+    "torch (2.14.1+cu130)",
+    "Available versions: 2.14.1+cu130, 2.14.0+cu130, 2.13.0+cu130",
+    "  INSTALLED: 2.15.0",
+    "  LATEST:    2.14.1+cu130"
+  )
+  expect_equal(AnimalTrackR:::.available_versions(out), c("2.14.1", "2.14.0", "2.13.0"))
+  expect_equal(AnimalTrackR:::.available_versions("ERROR: No matching distribution"),
+               character(0))
+})
+
+
+# Simulated pip, mirroring real output: `index` gives the torch versions on each
+# PyTorch index (tags not listed do not exist); torch 2.15.0 is installed
+.fake_pip <- function(index, install_ok = TRUE) {
   calls <- list()
   fn <- function(python, args, echo = FALSE) {
     calls[[length(calls) + 1]] <<- args
@@ -129,12 +144,16 @@ test_that("PyTorch CUDA builds are tried newest first, never newer than the driv
     }
     if (identical(args[2:4], c("pip", "index", "versions"))) {
       tag <- basename(args[length(args)])
-      if (tag %in% builds) {
-        return(list(status = 0L, output = c(
-          paste0("torch (2.15.0+", tag, ")"),
-          paste0("Available versions: 2.15.0+", tag, ", 2.14.0+", tag))))
+      v <- index[[tag]]
+      if (is.null(v)) {
+        return(list(status = 1L, output = "ERROR: No matching distribution found for torch"))
       }
-      return(list(status = 1L, output = "ERROR: No matching distribution found for torch"))
+      v <- paste0(v, "+", tag)
+      return(list(status = 0L, output = c(
+        paste0("torch (", v[1], ")"),
+        paste0("Available versions: ", paste(v, collapse = ", ")),
+        "  INSTALLED: 2.15.0",
+        paste0("  LATEST:    ", v[1]))))
     }
     if (args[3] == "install") {
       ok <- install_ok || !("--index-url" %in% args)
@@ -145,30 +164,61 @@ test_that("PyTorch CUDA builds are tried newest first, never newer than the driv
   list(fn = fn, calls = function() calls)
 }
 
+.installs <- function(calls) Filter(function(a) length(a) > 2 && a[3] == "install", calls)
+
+.mock_env <- function(pip, gpu = TRUE, env = parent.frame()) {
+  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate",
+                        .env = env)
+  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
+                        check_gpu = function(...) gpu, .package = "AnimalTrackR",
+                        .env = env)
+}
+
 
 test_that("configure_cuda installs the newest matching GPU build of the same PyTorch", {
-  pip <- .fake_pip(builds = c("cu130", "cu128"))
-  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
-  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
-                        check_gpu = function(...) TRUE, .package = "AnimalTrackR")
+  pip <- .fake_pip(list(cu130 = c("2.15.0", "2.14.1"), cu128 = c("2.15.0", "2.14.1")))
+  .mock_env(pip)
 
   expect_true(suppressMessages(configure_cuda(cuda.version = 13.1)))
-
-  calls <- pip$calls()
-  install <- Filter(function(a) length(a) > 2 && a[3] == "install", calls)
+  install <- .installs(pip$calls())
   expect_length(install, 1)
   expect_true(all(c("torch==2.15.0", "torchvision==0.29.2") %in% install[[1]]))
   expect_true("https://download.pytorch.org/whl/cu130" %in% install[[1]])
-  # Removed the CPU build first
-  expect_true(any(vapply(calls, function(a) length(a) > 2 && a[3] == "uninstall", logical(1))))
+  expect_true(any(vapply(pip$calls(), function(a) length(a) > 2 && a[3] == "uninstall",
+                         logical(1))))
+})
+
+
+test_that("configure_cuda does not mistake the installed version for an available one", {
+  # The situation found on Windows with CUDA 13.1: no cu131 index, and cu130
+  # only goes up to 2.14.1, while 2.15.0 is installed
+  pip <- .fake_pip(list(cu130 = c("2.14.1", "2.14.0"), cu128 = c("2.14.1")))
+  .mock_env(pip, gpu = FALSE)
+
+  msgs <- capture_messages(res <- configure_cuda(cuda.version = 13.1))
+  expect_false(res)
+  expect_length(.installs(pip$calls()), 0)
+  expect_true(any(grepl("has not been changed", msgs)))
+  expect_true(any(grepl('torch.version = "2.14.1"', msgs, fixed = TRUE)))
+  expect_true(any(grepl("cu130", msgs)))
+})
+
+
+test_that("configure_cuda can install a different PyTorch version on request", {
+  pip <- .fake_pip(list(cu130 = c("2.14.1", "2.14.0")))
+  .mock_env(pip)
+
+  expect_true(suppressMessages(configure_cuda(cuda.version = 13.1, torch.version = "2.14.1")))
+  install <- .installs(pip$calls())
+  expect_length(install, 1)
+  expect_true(all(c("torch==2.14.1", "torchvision") %in% install[[1]]))
+  expect_true("https://download.pytorch.org/whl/cu130" %in% install[[1]])
 })
 
 
 test_that("configure_cuda leaves the environment unchanged if no GPU build exists", {
-  pip <- .fake_pip(builds = character(0))
-  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
-  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
-                        check_gpu = function(...) FALSE, .package = "AnimalTrackR")
+  pip <- .fake_pip(list())
+  .mock_env(pip, gpu = FALSE)
 
   expect_message(res <- configure_cuda(cuda.version = 12.1), "has not been changed")
   expect_false(res)
@@ -179,16 +229,14 @@ test_that("configure_cuda leaves the environment unchanged if no GPU build exist
 
 
 test_that("configure_cuda restores the original PyTorch if the GPU install fails", {
-  pip <- .fake_pip(builds = "cu128", install_ok = FALSE)
-  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
-  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
-                        check_gpu = function(...) FALSE, .package = "AnimalTrackR")
+  pip <- .fake_pip(list(cu128 = "2.15.0"), install_ok = FALSE)
+  .mock_env(pip, gpu = FALSE)
 
   expect_message(res <- configure_cuda(cuda.version = 12.8), "restored")
   expect_false(res)
-  installs <- Filter(function(a) length(a) > 2 && a[3] == "install", pip$calls())
+  installs <- .installs(pip$calls())
   expect_length(installs, 2)
-  expect_false("--index-url" %in% installs[[2]])  # restore from the standard index
+  expect_false("--index-url" %in% installs[[2]])
   expect_true(all(c("torch==2.15.0", "torchvision==0.29.2") %in% installs[[2]]))
 })
 

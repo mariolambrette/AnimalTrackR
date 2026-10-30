@@ -177,7 +177,10 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
 #' supports. PyTorch is built for particular CUDA versions, so
 #' `configure_cuda()` looks for the newest PyTorch build that matches the
 #' version of PyTorch already in your environment and is no newer than your CUDA
-#' version, then installs it. The download is large (often 2-3 GB) and can take
+#' version, then installs it. Newly released versions of PyTorch are sometimes
+#' only built for the newest CUDA versions; if there is no GPU build of your
+#' version, the function says so and suggests the newest version that does have
+#' one (see `torch.version`). Updating your NVIDIA driver is the alternative. The download is large (often 2-3 GB) and can take
 #' several minutes. If no suitable build can be installed, the original version
 #' of PyTorch is put back so your environment keeps working.
 #'
@@ -188,6 +191,10 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
 #'  keep the default, "animaltrackr".
 #' @param cuda.version Your CUDA version, as shown by `nvidia-smi`, e.g. `13.1`
 #'  or `"12.8"`.
+#' @param torch.version Optional. A specific version of PyTorch to install
+#'  (e.g. `"2.14.1"`). By default the version already in the environment is
+#'  kept. Only needed if that version has no GPU build for your CUDA version:
+#'  the function tells you if so, and which version to use instead.
 #'
 #' @return Invisibly, `TRUE` if the GPU can now be used, otherwise `FALSE`.
 #' @export
@@ -202,7 +209,8 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
 #'
 #' @seealso [check_gpu()], [create_TrackR_env()]
 
-configure_cuda <- function(envname = "animaltrackr", cuda.version){
+configure_cuda <- function(envname = "animaltrackr", cuda.version,
+                           torch.version = NULL){
 
   cuda <- .parse_cuda_version(cuda.version)
 
@@ -224,38 +232,58 @@ configure_cuda <- function(envname = "animaltrackr", cuda.version){
   }
   torch_v <- sub("\\+.*$", "", trimws(current$output[length(current$output) - 1]))
   vision_v <- sub("\\+.*$", "", trimws(current$output[length(current$output)]))
-  pins <- c(paste0("torch==", torch_v), paste0("torchvision==", vision_v))
 
-  message("Looking for a GPU build of PyTorch ", torch_v,
+  restore <- c(paste0("torch==", torch_v), paste0("torchvision==", vision_v))
+
+  # Version to install: the current one unless another is requested
+  target <- if (is.null(torch.version)) torch_v else as.character(torch.version)
+  pins <- if (identical(target, torch_v)) restore else
+    c(paste0("torch==", target), "torchvision")  # pip picks the matching torchvision
+
+  message("Looking for a GPU build of PyTorch ", target,
           " for CUDA ", cuda$label, " or older...")
 
-  tags <- .cuda_tags(cuda)
   chosen <- NULL
-  for (tag in tags) {
+  newest <- NULL  # newest GPU build for the newest compatible CUDA version
+  for (tag in .cuda_tags(cuda)) {
     url <- paste0("https://download.pytorch.org/whl/", tag)
-    available <- .run_py(python, c("-m", "pip", "index", "versions", "torch",
-                                   "--index-url", url))
-    if (any(grepl("unknown command|no such command", available$output, ignore.case = TRUE))) {
+    res <- .run_py(python, c("-m", "pip", "index", "versions", "torch",
+                             "--index-url", url))
+    if (any(grepl("unknown command|no such command", res$output, ignore.case = TRUE))) {
       stop("This version of pip cannot list available PyTorch builds. Install the ",
            "GPU build manually using the command from ",
-           "https://pytorch.org/get-started/locally/ (PyTorch ", torch_v, ").")
+           "https://pytorch.org/get-started/locally/ (PyTorch ", target, ").")
     }
-    if (available$status == 0 &&
-        any(grepl(paste0("\\b", gsub(".", "\\.", torch_v, fixed = TRUE), "\\b"),
-                  available$output))) {
+    versions <- if (res$status == 0) .available_versions(res$output) else character(0)
+    if (length(versions) > 0 && is.null(newest)) {
+      newest <- list(version = versions[1], tag = tag)
+    }
+    if (target %in% versions) {
       chosen <- tag
       break
     }
   }
 
   if (is.null(chosen)) {
-    message("No GPU build of PyTorch ", torch_v, " was found for CUDA ",
-            cuda$label, " or older. Your environment has not been changed.\n",
-            "See https://pytorch.org/get-started/locally/ for supported CUDA versions.")
+    msg <- paste0("No GPU build of PyTorch ", target, " is available for CUDA ",
+                  cuda$label, " or older. Your environment has not been changed.")
+    if (!is.null(newest)) {
+      msg <- paste0(
+        msg, "\nThe newest PyTorch with a GPU build for your CUDA version is ",
+        newest$version, " (", newest$tag, "). Either install that with:\n",
+        "  configure_cuda(cuda.version = ", cuda$label, ", torch.version = \"",
+        newest$version, "\")\n",
+        "or update your NVIDIA driver to support a newer CUDA version."
+      )
+    } else {
+      msg <- paste0(msg, "\nSee https://pytorch.org/get-started/locally/ for ",
+                    "supported CUDA versions.")
+    }
+    message(msg)
     return(invisible(FALSE))
   }
 
-  message("Installing PyTorch ", torch_v, " (", chosen, "). This is a large ",
+  message("Installing PyTorch ", target, " (", chosen, "). This is a large ",
           "download and may take several minutes...")
   url <- paste0("https://download.pytorch.org/whl/", chosen)
   .run_py(python, c("-m", "pip", "uninstall", "-y", "torch", "torchvision"))
@@ -264,7 +292,7 @@ configure_cuda <- function(envname = "animaltrackr", cuda.version){
 
   if (installed$status != 0) {
     message("Installing the GPU build failed. Restoring the original version...")
-    .run_py(python, c("-m", "pip", "install", pins), echo = TRUE)
+    .run_py(python, c("-m", "pip", "install", restore), echo = TRUE)
     message("Your environment has been restored. See the messages above for ",
             "the cause of the problem.")
     return(invisible(FALSE))
@@ -274,10 +302,23 @@ configure_cuda <- function(envname = "animaltrackr", cuda.version){
   if (gpu) {
     message("GPU acceleration is available. Restart R for the change to take effect.")
   } else {
-    message("PyTorch ", torch_v, " (", chosen, ") was installed, but the GPU ",
+    message("PyTorch ", target, " (", chosen, ") was installed, but the GPU ",
             "could not be used. Check that your NVIDIA drivers are up to date.")
   }
   invisible(gpu)
+}
+
+
+
+#' INTERNAL Versions listed on the "Available versions:" line of
+#' `pip index versions`, newest first, without '+cu130' style suffixes. Other
+#' lines (e.g. "INSTALLED: 2.15.0") are ignored.
+#' @noRd
+.available_versions <- function(output) {
+  line <- grep("^\\s*Available versions:", output, value = TRUE)
+  if (length(line) == 0) return(character(0))
+  v <- trimws(strsplit(sub("^\\s*Available versions:", "", line[1]), ",")[[1]])
+  unique(sub("\\+.*$", "", v[nzchar(v)]))
 }
 
 

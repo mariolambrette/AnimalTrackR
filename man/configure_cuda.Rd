@@ -4,7 +4,7 @@
 \alias{configure_cuda}
 \title{Set up an AnimalTrackR environment to use your GPU}
 \usage{
-configure_cuda(envname = "animaltrackr", cuda.version)
+configure_cuda(envname = "animaltrackr", cuda.version, torch.version = NULL)
 }
 \arguments{
 \item{envname}{Name of the AnimalTrackR conda environment. Most users should
@@ -12,6 +12,11 @@ keep the default, "animaltrackr".}
 
 \item{cuda.version}{Your CUDA version, as shown by \code{nvidia-smi}, e.g. \code{13.1}
 or \code{"12.8"}.}
+
+\item{torch.version}{Optional. A specific version of PyTorch to install
+(e.g. \code{"2.14.1"}). By default the version already in the environment is
+kept. Only needed if that version has no GPU build for your CUDA version:
+the function tells you if so, and which version to use instead.}
 }
 \value{
 Invisibly, \code{TRUE} if the GPU can now be used, otherwise \code{FALSE}.
@@ -41,7 +46,10 @@ The CUDA version shown by \code{nvidia-smi} is the newest your graphics driver
 supports. PyTorch is built for particular CUDA versions, so
 \code{configure_cuda()} looks for the newest PyTorch build that matches the
 version of PyTorch already in your environment and is no newer than your CUDA
-version, then installs it. The download is large (often 2-3 GB) and can take
+version, then installs it. Newly released versions of PyTorch are sometimes
+only built for the newest CUDA versions; if there is no GPU build of your
+version, the function says so and suggests the newest version that does have
+one (see \code{torch.version}). Updating your NVIDIA driver is the alternative. The download is large (often 2-3 GB) and can take
 several minutes. If no suitable build can be installed, the original version
 of PyTorch is put back so your environment keeps working.
 
