@@ -193,6 +193,23 @@ test_that("configure_cuda restores the original PyTorch if the GPU install fails
 })
 
 
+test_that(".run_py runs a real Python subprocess, including paths with spaces", {
+  python <- Sys.which(c("python3", "python"))
+  python <- python[nzchar(python)][1]
+  skip_if(is.na(python), "No Python found on PATH")
+
+  dir <- file.path(tempdir(), "folder with spaces")
+  dir.create(dir, showWarnings = FALSE)
+  script <- file.path(dir, "print version.py")
+  writeLines("import sys; print('ok', sys.version_info[0])", script)
+  on.exit(unlink(dir, recursive = TRUE))
+
+  res <- AnimalTrackR:::.run_py(unname(python), script)
+  expect_equal(res$status, 0L)
+  expect_equal(res$output, "ok 3")
+})
+
+
 test_that("configure_cuda rejects invalid CUDA versions before changing anything", {
   expect_error(configure_cuda(cuda.version = "invalid"), "nvidia-smi")
 })

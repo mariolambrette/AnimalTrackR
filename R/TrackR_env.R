@@ -330,12 +330,13 @@ configure_cuda <- function(envname = "animaltrackr", cuda.version){
 #' @return list(status, output)
 #' @noRd
 .run_py <- function(python, args, echo = FALSE) {
-  quote <- function(x) {
-    if (.Platform$OS.type == "windows") shQuote(x, type = "cmd") else shQuote(x)
-  }
-  # Quote anything containing spaces (e.g. paths); flags and versions are safe
+  windows <- .Platform$OS.type == "windows"
+  quote <- function(x) if (windows) shQuote(x, type = "cmd") else shQuote(x)
+  # Arguments are passed to the shell as typed, so quote any containing spaces
+  # (e.g. paths); flags and version numbers are safe as they are
   args <- ifelse(grepl("\\s", args), quote(args), args)
-  out <- suppressWarnings(system2(quote(python), args, stdout = TRUE, stderr = TRUE))
+  # system2() quotes the program path itself, so it must not be quoted here
+  out <- suppressWarnings(system2(python, args, stdout = TRUE, stderr = TRUE))
   status <- attr(out, "status")
   if (echo && length(out) > 0) message(paste(out, collapse = "\n"))
   list(status = if (is.null(status)) 0L else status, output = out)
