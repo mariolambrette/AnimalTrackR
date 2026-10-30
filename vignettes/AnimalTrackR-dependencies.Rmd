@@ -32,18 +32,38 @@ AnimalTrackR has been tested using python 3.11. Many of its dependencies will wo
 
 ## Python packages
 
-AnimalTrackR has two core python package dependencies; ultalytics and opencv.
+AnimalTrackR uses these Python packages:
 
-**ultralytics** is a python API for YOLO. More details are available [here](https://docs.ultralytics.com/)
-**opencv** is a widely used computer vision library that is essential for basic operations performed by AnimaltrackR. See [here](https://pypi.org/project/opencv-python/) for details.
+* **ultralytics**, the Python interface to YOLO ([documentation](https://docs.ultralytics.com/)), which in turn uses **torch** and **torchvision** (PyTorch)
+* **opencv-python**, a widely used computer vision library used for reading and writing video and images ([details](https://pypi.org/project/opencv-python/))
+* **numpy**, **pandas** and **matplotlib**, for handling and plotting data
 
-If you are using a CPU only installing the most recent version of these packages should not give you any issues.
+`create_TrackR_env()` installs the exact versions that AnimalTrackR has been tested with. These are listed in a requirements file that comes with the package:
+
+```{r requirements, eval=FALSE}
+cat(readLines(system.file("python", "requirements.txt", package = "AnimalTrackR")), sep = "\n")
+```
+
+To create a custom environment with the same versions, install from this file with pip in your Python 3.11 conda environment:
+
+```{bash custom-env, eval=FALSE}
+pip install -r path/to/requirements.txt
+```
+
+where `path/to/requirements.txt` is the path returned by `system.file("python", "requirements.txt", package = "AnimalTrackR")`. Other versions will often work, but results may differ slightly and are not guaranteed. `check_TrackR_env()` lists any packages whose versions differ from the tested ones.
 
 ## Python packages for GPU support
 
-If you are using an NVIDIA gpu there are some additional dependencies you will need. Where package versions are provided in this list they are **essential** to avoid conflicts:
+If you have an NVIDIA GPU, PyTorch needs to be the build made for your CUDA version (find this by running `nvidia-smi` in a command prompt). The simplest way is to let AnimalTrackR do this for you, which installs the GPU build of the same tested PyTorch version:
 
-* pytorch==2.1
-* torchvision
-* pytorch-cuda (version must correspond to cuda version, which can be found by running `nvidia-smi` in a command prompt)
-* numpy<2 (numpy version must be less than 2 to avoid conflicts)
+```{r gpu, eval=FALSE}
+configure_cuda(cuda.version = 13.1)  # use your own CUDA version
+```
+
+To do it by hand, install the tested `torch` and `torchvision` versions from PyTorch's package index for your CUDA version, for example for CUDA 13.0:
+
+```{bash gpu-manual, eval=FALSE}
+pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cu130
+```
+
+See [pytorch.org](https://pytorch.org/get-started/locally/) for the CUDA versions available.

@@ -24,6 +24,18 @@ of required packages within it. For the majority of users it only needs to be ru
 on the first usage of \code{AnimalTrackR}
 }
 \details{
+\strong{Package versions}
+
+\code{create_TrackR_env()} installs the exact versions of the Python packages
+(including PyTorch and Ultralytics) that AnimalTrackR has been tested with,
+listed in
+\code{system.file("python", "requirements.txt", package = "AnimalTrackR")}. Every
+installation therefore uses the same software, with or without a GPU, so
+results are reproducible on different computers. \code{\link[=check_TrackR_env]{check_TrackR_env()}} tells
+you if an environment's versions differ from these.
+
+\strong{Usage}
+
 The majority of users should run \code{create_TrackR_env()} once when they first use the
 \code{AnimalTrackR} package with the default arguments. This will create a conda
 environment named "animaltrackr". Each subsequent call to \code{library(AnimalTrackR)}

@@ -148,6 +148,8 @@ This relies on you having Miniconda installed on your machine. If you do not hav
 
 These steps are only required the first time you use AnimalTrackR. The correct environment is now set up and will be made available to your R session with any subsequent usage of `library(AnimalTrackR)`.
 
+`create_TrackR_env()` installs the exact versions of the Python packages (including PyTorch and Ultralytics) that AnimalTrackR has been tested with, so every installation uses the same software and results are reproducible on different computers.
+
 See the function documentation for `create_TrackR_env()` or the dependencies vignette (`vignette("AnimalTrackR-dependencies")`) for more information on custom environments.
 
 #### A note on GPUs

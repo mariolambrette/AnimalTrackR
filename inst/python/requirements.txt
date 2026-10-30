@@ -1,0 +1,15 @@
+# Python packages installed by AnimalTrackR::create_TrackR_env() (Python 3.11).
+#
+# These are the exact versions AnimalTrackR has been tested with, so every
+# installation, with or without a GPU, uses the same software. configure_cuda()
+# swaps torch and torchvision for GPU builds of these same versions.
+#
+# To update: install newer versions in a test environment, run the package
+# tests and a training run, then change the versions here.
+torch==2.14.1
+torchvision==0.29.1
+ultralytics==8.4.193
+opencv-python==5.0.0.93
+numpy==2.4.6
+pandas==3.1.0
+matplotlib==3.11.2

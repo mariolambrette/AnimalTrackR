@@ -45,7 +45,8 @@ either has no NVIDIA GPU or its drivers are not installed.
 The CUDA version shown by \code{nvidia-smi} is the newest your graphics driver
 supports. PyTorch is built for particular CUDA versions, so
 \code{configure_cuda()} looks for the newest PyTorch build that matches the
-version of PyTorch already in your environment and is no newer than your CUDA
+version of PyTorch already in your environment (the tested version, if the
+environment was made with \code{\link[=create_TrackR_env]{create_TrackR_env()}}) and is no newer than your CUDA
 version, then installs it. Newly released versions of PyTorch are sometimes
 only built for the newest CUDA versions; if there is no GPU build of your
 version, the function says so and suggests the newest version that does have

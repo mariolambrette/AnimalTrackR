@@ -16,7 +16,9 @@ TRUE if the environment meets the requirements, or FALSE if not.
 Checks a named conda environment ("animaltrackr" by default) to see if meets
 the python dependency requirements of AnimalTrackR: Python 3.11 with the
 ultralytics, opencv, pandas and matplotlib packages. If anything is missing,
-a message says what and gives the command to install it. Alternatively,
+a message says what and gives the command to install it. If any package
+versions differ from those AnimalTrackR was tested with, a note lists them
+(this does not make the check fail). Alternatively,
 \code{\link[=create_TrackR_env]{create_TrackR_env()}} creates a new environment with everything needed.
 
 To further check an enviornment for GPU compatibility, you can use

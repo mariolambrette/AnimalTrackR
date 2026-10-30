@@ -6,6 +6,18 @@
 #' on the first usage of `AnimalTrackR`
 #'
 #' @details
+#' **Package versions**
+#'
+#' `create_TrackR_env()` installs the exact versions of the Python packages
+#' (including PyTorch and Ultralytics) that AnimalTrackR has been tested with,
+#' listed in
+#' `system.file("python", "requirements.txt", package = "AnimalTrackR")`. Every
+#' installation therefore uses the same software, with or without a GPU, so
+#' results are reproducible on different computers. [check_TrackR_env()] tells
+#' you if an environment's versions differ from these.
+#'
+#' **Usage**
+#'
 #' The majority of users should run `create_TrackR_env()` once when they first use the
 #' `AnimalTrackR` package with the default arguments. This will create a conda
 #' environment named "animaltrackr". Each subsequent call to `library(AnimalTrackR)`
@@ -176,7 +188,8 @@ create_TrackR_env <- function(envname = "animaltrackr", cuda.version = FALSE){
 #' The CUDA version shown by `nvidia-smi` is the newest your graphics driver
 #' supports. PyTorch is built for particular CUDA versions, so
 #' `configure_cuda()` looks for the newest PyTorch build that matches the
-#' version of PyTorch already in your environment and is no newer than your CUDA
+#' version of PyTorch already in your environment (the tested version, if the
+#' environment was made with [create_TrackR_env()]) and is no newer than your CUDA
 #' version, then installs it. Newly released versions of PyTorch are sometimes
 #' only built for the newest CUDA versions; if there is no GPU build of your
 #' version, the function says so and suggests the newest version that does have
@@ -476,7 +489,9 @@ set_TrackR_env <- function(envname = "animaltrackr"){
 #' Checks a named conda environment ("animaltrackr" by default) to see if meets
 #' the python dependency requirements of AnimalTrackR: Python 3.11 with the
 #' ultralytics, opencv, pandas and matplotlib packages. If anything is missing,
-#' a message says what and gives the command to install it. Alternatively,
+#' a message says what and gives the command to install it. If any package
+#' versions differ from those AnimalTrackR was tested with, a note lists them
+#' (this does not make the check fail). Alternatively,
 #' [`create_TrackR_env()`] creates a new environment with everything needed.
 #'
 #' To further check an enviornment for GPU compatibility, you can use
@@ -513,6 +528,10 @@ check_TrackR_env <- function(envname = "animaltrackr"){
   available <- vapply(names(modules), reticulate::py_module_available, logical(1))
   if (!all(available)) {
     missing <- unname(modules[!available])
+    pinned <- .trackr_py_packages()
+    pinned_names <- tolower(sub("==.*$", "", pinned))
+    missing <- ifelse(missing %in% pinned_names,
+                      pinned[match(missing, pinned_names)], missing)
     message(
       "The active Python environment is missing: ", paste(missing, collapse = ", "),
       ".\nInstall with: reticulate::py_install(c(",
@@ -526,6 +545,22 @@ check_TrackR_env <- function(envname = "animaltrackr"){
   py_version <- as.numeric(substr(reticulate::py_config()$version, 1, 4))
   pv <- py_version == 3.11
 
+  # Let users know (without failing) if their versions differ from the tested ones
+  pk <- tryCatch(reticulate::py_list_packages(envname), error = function(e) NULL)
+  if (!is.null(pk)) {
+    d <- .version_differences(stats::setNames(pk$version, pk$package))
+    if (nrow(d) > 0) {
+      message(
+        "Note: some Python packages differ from the versions AnimalTrackR was ",
+        "tested with:\n",
+        paste0("  ", d$package, " ", d$installed, " (tested: ", d$tested, ")",
+               collapse = "\n"),
+        "\nAnimalTrackR should still work, but results may differ slightly. ",
+        "Recreate the environment with `create_TrackR_env()` to use the tested versions."
+      )
+    }
+  }
+
   return(all(available, pv))
 }
 
@@ -534,15 +569,25 @@ check_TrackR_env <- function(envname = "animaltrackr"){
 #' INTERNAL Python packages installed by create_TrackR_env()
 #'
 #' @description
-#' Every Python package imported by AnimalTrackR's Python code must be listed
-#' here (pip names), and in `.trackr_py_modules()` (import names), so that new
-#' environments have everything needed and `check_TrackR_env()` catches
-#' anything missing. pandas and matplotlib are listed explicitly because recent
-#' versions of ultralytics no longer install pandas.
+#' Read from `inst/python/requirements.txt`, which pins the exact versions
+#' AnimalTrackR has been tested with. Every Python package imported by
+#' AnimalTrackR's Python code must be listed there, and in
+#' `.trackr_py_modules()` (import names), so that new environments have
+#' everything needed and `check_TrackR_env()` catches anything missing.
 #'
+#' @return Character vector of pip requirements, e.g. "torch==2.14.1"
 #' @noRd
 .trackr_py_packages <- function() {
-  c("opencv-python", "ultralytics", "pandas", "matplotlib")
+  f <- system.file("python", "requirements.txt", package = "AnimalTrackR")
+  l <- trimws(readLines(f, warn = FALSE))
+  l[nzchar(l) & !startsWith(l, "#")]
+}
+
+#' INTERNAL Pinned versions as a named vector (pip name -> version)
+#' @noRd
+.trackr_py_versions <- function() {
+  req <- .trackr_py_packages()
+  stats::setNames(sub("^.*==", "", req), tolower(sub("==.*$", "", req)))
 }
 
 #' INTERNAL Python modules AnimalTrackR imports (import name = pip name)
@@ -550,4 +595,21 @@ check_TrackR_env <- function(envname = "animaltrackr"){
 .trackr_py_modules <- function() {
   c(cv2 = "opencv-python", ultralytics = "ultralytics",
     pandas = "pandas", matplotlib = "matplotlib")
+}
+
+
+
+#' INTERNAL Compare installed Python package versions with the tested ones
+#'
+#' @param installed Named character vector (pip name -> version), as from
+#'   reticulate::py_list_packages()
+#' @return Data frame of packages whose versions differ (empty if none)
+#' @noRd
+.version_differences <- function(installed) {
+  tested <- .trackr_py_versions()
+  names(installed) <- tolower(names(installed))
+  have <- sub("\\+.*$", "", installed[names(tested)])  # ignore e.g. "+cu130"
+  diff <- !is.na(have) & have != tested
+  data.frame(package = names(tested)[diff], installed = unname(have[diff]),
+             tested = unname(tested[diff]))
 }

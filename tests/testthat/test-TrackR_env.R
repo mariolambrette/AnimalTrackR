@@ -401,5 +401,31 @@ test_that("every Python package imported by AnimalTrackR is installed and checke
 
   expect_setequal(needed, names(AnimalTrackR:::.trackr_py_modules()))
   expect_true(all(AnimalTrackR:::.trackr_py_modules() %in%
-                    AnimalTrackR:::.trackr_py_packages()))
+                    names(AnimalTrackR:::.trackr_py_versions())))
+})
+
+
+test_that("Python package versions are pinned in requirements.txt", {
+  req <- AnimalTrackR:::.trackr_py_packages()
+  # Every requirement has an exact version
+  expect_true(all(grepl("^[A-Za-z0-9_.-]+==[0-9][0-9A-Za-z.]*$", req)))
+  v <- AnimalTrackR:::.trackr_py_versions()
+  expect_true(all(c("torch", "torchvision", "ultralytics", "opencv-python",
+                    "numpy", "pandas", "matplotlib") %in% names(v)))
+  expect_equal(unname(v["torch"]), "2.14.1")
+})
+
+
+test_that("version differences ignore GPU build suffixes and report real changes", {
+  tested <- AnimalTrackR:::.trackr_py_versions()
+  installed <- tested
+  names(installed)[names(installed) == "opencv-python"] <- "OpenCV-Python"  # case
+  installed["torch"] <- paste0(tested[["torch"]], "+cu130")                 # GPU build
+  expect_equal(nrow(AnimalTrackR:::.version_differences(installed)), 0)
+
+  installed["ultralytics"] <- "9.0.0"
+  d <- AnimalTrackR:::.version_differences(installed)
+  expect_equal(d$package, "ultralytics")
+  expect_equal(d$installed, "9.0.0")
+  expect_equal(d$tested, unname(tested[["ultralytics"]]))
 })
