@@ -97,22 +97,104 @@ test_that("set_TrackR_env validates environment requirements", {
 # })
 
 
-test_that("configure_cuda validates cuda version parameter", {
-  skip_if_not_installed("reticulate")
-  skip_if_no_conda_env()
-  skip_if_no_gpu()
+test_that("CUDA versions are parsed and validated", {
+  v <- AnimalTrackR:::.parse_cuda_version(13.1)
+  expect_equal(c(v$major, v$minor), c(13L, 1L))
+  v <- AnimalTrackR:::.parse_cuda_version("12.8")
+  expect_equal(c(v$major, v$minor), c(12L, 8L))
+  v <- AnimalTrackR:::.parse_cuda_version(12)
+  expect_equal(c(v$major, v$minor), c(12L, 0L))
+  expect_error(AnimalTrackR:::.parse_cuda_version("invalid"), "nvidia-smi")
+  expect_error(AnimalTrackR:::.parse_cuda_version(c(12.1, 12.4)), "nvidia-smi")
+  expect_error(AnimalTrackR:::.parse_cuda_version(10.2), "too old")
+})
 
-  # This would require a GPU environment
-  # Test that the function accepts numeric and character versions
-  expect_error(
-    configure_cuda(cuda.version = "invalid"),
-    NA  # Should not error with string
-  )
 
-  expect_error(
-    configure_cuda(cuda.version = 12.1),
-    NA  # Should not error with numeric
-  )
+test_that("PyTorch CUDA builds are tried newest first, never newer than the driver", {
+  tags <- AnimalTrackR:::.cuda_tags(AnimalTrackR:::.parse_cuda_version(13.1))
+  expect_equal(utils::head(tags, 4), c("cu131", "cu130", "cu129", "cu128"))
+  expect_equal(utils::tail(tags, 1), "cu118")
+  expect_false(any(c("cu132", "cu117") %in% tags))
+  expect_equal(AnimalTrackR:::.cuda_tags(AnimalTrackR:::.parse_cuda_version(11.8)), "cu118")
+})
+
+
+# Simulated pip: records calls; `builds` are the index tags that have torch 2.15.0
+.fake_pip <- function(builds, install_ok = TRUE) {
+  calls <- list()
+  fn <- function(python, args, echo = FALSE) {
+    calls[[length(calls) + 1]] <<- args
+    if (length(args) == 1) {  # version script
+      return(list(status = 0L, output = c("2.15.0+cpu", "0.29.2+cpu")))
+    }
+    if (identical(args[2:4], c("pip", "index", "versions"))) {
+      tag <- basename(args[length(args)])
+      if (tag %in% builds) {
+        return(list(status = 0L, output = c(
+          paste0("torch (2.15.0+", tag, ")"),
+          paste0("Available versions: 2.15.0+", tag, ", 2.14.0+", tag))))
+      }
+      return(list(status = 1L, output = "ERROR: No matching distribution found for torch"))
+    }
+    if (args[3] == "install") {
+      ok <- install_ok || !("--index-url" %in% args)
+      return(list(status = if (ok) 0L else 1L, output = ""))
+    }
+    list(status = 0L, output = "")
+  }
+  list(fn = fn, calls = function() calls)
+}
+
+
+test_that("configure_cuda installs the newest matching GPU build of the same PyTorch", {
+  pip <- .fake_pip(builds = c("cu130", "cu128"))
+  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
+  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
+                        check_gpu = function(...) TRUE, .package = "AnimalTrackR")
+
+  expect_true(suppressMessages(configure_cuda(cuda.version = 13.1)))
+
+  calls <- pip$calls()
+  install <- Filter(function(a) length(a) > 2 && a[3] == "install", calls)
+  expect_length(install, 1)
+  expect_true(all(c("torch==2.15.0", "torchvision==0.29.2") %in% install[[1]]))
+  expect_true("https://download.pytorch.org/whl/cu130" %in% install[[1]])
+  # Removed the CPU build first
+  expect_true(any(vapply(calls, function(a) length(a) > 2 && a[3] == "uninstall", logical(1))))
+})
+
+
+test_that("configure_cuda leaves the environment unchanged if no GPU build exists", {
+  pip <- .fake_pip(builds = character(0))
+  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
+  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
+                        check_gpu = function(...) FALSE, .package = "AnimalTrackR")
+
+  expect_message(res <- configure_cuda(cuda.version = 12.1), "has not been changed")
+  expect_false(res)
+  changed <- vapply(pip$calls(), function(a) length(a) > 2 && a[3] %in% c("install", "uninstall"),
+                    logical(1))
+  expect_false(any(changed))
+})
+
+
+test_that("configure_cuda restores the original PyTorch if the GPU install fails", {
+  pip <- .fake_pip(builds = "cu128", install_ok = FALSE)
+  local_mocked_bindings(condaenv_exists = function(...) TRUE, .package = "reticulate")
+  local_mocked_bindings(.run_py = pip$fn, .env_python = function(...) "python",
+                        check_gpu = function(...) FALSE, .package = "AnimalTrackR")
+
+  expect_message(res <- configure_cuda(cuda.version = 12.8), "restored")
+  expect_false(res)
+  installs <- Filter(function(a) length(a) > 2 && a[3] == "install", pip$calls())
+  expect_length(installs, 2)
+  expect_false("--index-url" %in% installs[[2]])  # restore from the standard index
+  expect_true(all(c("torch==2.15.0", "torchvision==0.29.2") %in% installs[[2]]))
+})
+
+
+test_that("configure_cuda rejects invalid CUDA versions before changing anything", {
+  expect_error(configure_cuda(cuda.version = "invalid"), "nvidia-smi")
 })
 
 

@@ -170,34 +170,32 @@ information on custom environments.
 
 #### A note on GPUs
 
-The YOLO models on which AnimalTrackR relies are optimised to run on
-[GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). While
-they will still run on a standard computer with a CPU they will be
-significantly faster (approx. 10-50x) on a properly configured GPU.
-Currently YOLO models only support CUDA-compatible GPUs. If you have one
-in your system you can configure the `AnimalTrackR` environment to use
-it by adding your specific CUDA version to the call to
-`create_TrackR_env()` as follows:
+The YOLO models on which AnimalTrackR relies are optimised to run on [GPUs](https://en.wikipedia.org/wiki/Graphics_processing_unit). While they will still run on a standard computer with a CPU they will be significantly faster (approx. 10-50x) on a properly configured GPU. Currently YOLO models only support NVIDIA (CUDA-compatible) GPUs.
 
-``` r
-
-library(AnimalTrackR)
-
-# Create a CUDA enabled conda environment for cuda version 12.1
-create_TrackR_env(cuda.version = 12.1)
-
-# Check that the environment was created correctly and that the GPU is accessible
-check_gpu() # This should return TRUE
-```
-
-If you have CUDA but do not know what version you have you can open a
-command prompt and enter
+First, find your CUDA version by opening a command prompt (Windows) or terminal (Mac/Linux) and entering:
 
 ``` bash
 nvidia-smi
 ```
 
-The first line of the result will give you your CUDA version.
+The CUDA version is shown in the top right of the output (e.g. "CUDA Version: 13.1"). If the command is not found, your computer either has no NVIDIA GPU or its drivers are not installed.
+
+Then give this version to `create_TrackR_env()` when you create your environment:
+
+``` r
+library(AnimalTrackR)
+
+# Create an environment that can use the GPU (here for CUDA 13.1)
+create_TrackR_env(cuda.version = 13.1)
+
+# If you already have an AnimalTrackR environment, you can add GPU support instead:
+configure_cuda(cuda.version = 13.1)
+
+# Restart R, then check that the GPU can be used
+check_gpu() # This should return TRUE
+```
+
+AnimalTrackR installs the same versions of the Python packages whether or not you use a GPU, then swaps in the GPU build of PyTorch that best matches your CUDA version, so results are comparable between computers. This involves a large download (often 2-3 GB). See `?configure_cuda` for details.
 
 If you do not have a GPU, or none of this makes sense to you, do not
 worry. The models will still run on a standard laptop, they will just

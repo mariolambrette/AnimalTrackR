@@ -2,34 +2,61 @@
 % Please edit documentation in R/TrackR_env.R
 \name{configure_cuda}
 \alias{configure_cuda}
-\title{Configure conda environment to enable GPU acceleration}
+\title{Set up an AnimalTrackR environment to use your GPU}
 \usage{
 configure_cuda(envname = "animaltrackr", cuda.version)
 }
 \arguments{
-\item{envname}{Name of the conda environment in which to configure CUDA. This
-should normally stay as the default, "animaltrackr"}
+\item{envname}{Name of the AnimalTrackR conda environment. Most users should
+keep the default, "animaltrackr".}
 
-\item{cuda.version}{Version of cuda installed on the users machine (numeric or character string, e.g. 12.1)}
+\item{cuda.version}{Your CUDA version, as shown by \code{nvidia-smi}, e.g. \code{13.1}
+or \code{"12.8"}.}
+}
+\value{
+Invisibly, \code{TRUE} if the GPU can now be used, otherwise \code{FALSE}.
 }
 \description{
-This function installs the necessary packages in the animaltrackr environment
-to allow GPU acceleration. This can significantly improve model processing
-speeds.
+Training and running detection models is much faster (often 10-50 times)
+on a computer with a suitable NVIDIA graphics card (GPU). \code{configure_cuda()}
+replaces the standard version of PyTorch (the software that runs the models)
+in your AnimalTrackR environment with a version that can use your GPU. The
+same version of PyTorch is kept, so results are comparable with runs on
+computers without a GPU.
 
-The function is a simple wrapper function to install pytorch in the animaltrackr
-environment and check if GPU acceleration is now available. If this does not work
-(you can verify gpu availability using \code{check_gpu()}) you will need to verify
-your set-up separately.
+You only need to do this once per computer. \code{\link[=create_TrackR_env]{create_TrackR_env()}} calls it
+for you if you give it a \code{cuda.version}.
+}
+\details{
+\strong{Finding your CUDA version}
+
+Open a command prompt (Windows) or terminal (Mac/Linux) and run
+\code{nvidia-smi}. The CUDA version is shown in the top right of the output
+(e.g. "CUDA Version: 13.1"). If the command is not found, your computer
+either has no NVIDIA GPU or its drivers are not installed.
+
+\strong{What the function does}
+
+The CUDA version shown by \code{nvidia-smi} is the newest your graphics driver
+supports. PyTorch is built for particular CUDA versions, so
+\code{configure_cuda()} looks for the newest PyTorch build that matches the
+version of PyTorch already in your environment and is no newer than your CUDA
+version, then installs it. The download is large (often 2-3 GB) and can take
+several minutes. If no suitable build can be installed, the original version
+of PyTorch is put back so your environment keeps working.
+
+Finally, the function checks that the GPU can be used (\code{\link[=check_gpu]{check_gpu()}}).
+Restart R afterwards so the change takes effect.
 }
 \examples{
 \dontrun{
 library(AnimalTrackR)
-create_TrackR_env()
-configure_cuda(cuda.version = 12.1)
+configure_cuda(cuda.version = 13.1)
+# Restart R, then check:
+check_gpu()
 }
 
 }
 \seealso{
-\code{\link[=check_gpu]{check_gpu()}}
+\code{\link[=check_gpu]{check_gpu()}}, \code{\link[=create_TrackR_env]{create_TrackR_env()}}
 }

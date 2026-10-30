@@ -10,9 +10,10 @@ create_TrackR_env(envname = "animaltrackr", cuda.version = FALSE)
 \item{envname}{Character string. The name of the conda environment to create.
 Most users should not need to change from the default, "animaltrackr"}
 
-\item{cuda.version}{The verion of CUDA installed on the user's machine. Either
-as a decimal or a string. You can find your cuda version by running \code{nvidia-smi}
-at the command line.}
+\item{cuda.version}{Optional. If your computer has an NVIDIA GPU, your CUDA
+version as shown by running \code{nvidia-smi} in a command prompt (e.g. \code{13.1}).
+The environment is then set up to use the GPU (see \code{\link[=configure_cuda]{configure_cuda()}}).
+Leave as \code{FALSE} (the default) for computers without a GPU.}
 }
 \value{
 Invisibly returns TRUE upon successful environment creation and activation.
